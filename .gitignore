@@ -1,0 +1,35 @@
+# Byte-code files
+*.pyc
+__pycache__/
+
+# Virtual environment
+venv/
+.venv/
+
+# Editor-specific files
+.idea/
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+
+# Miscellaneous
+.env
+.env.*
+!.env.example
+
+.envrc
+
+dist/
+build/
+*.egg-info/
+
+.deploy_env
+
+debug/
