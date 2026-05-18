@@ -9,6 +9,16 @@ from .tools import (
     get_lark_document_content_pdf,
     get_lark_document_content_docx,
     get_access_token,
+    create_lark_document,
+    update_lark_document,
+    delete_lark_document,
+    feishu_mcp_create_doc,
+    feishu_mcp_update_doc,
+    feishu_mcp_fetch_doc,
+    save_ai_output_to_feishu_doc,
+    save_ai_output_to_existing_feishu_doc,
+    wait_for_feishu_doc_create_task,
+    wait_for_feishu_doc_update_task,
 )
 
 # 激活 ADK 多模态扩展：让工具能通过 FunctionResponse.parts 传递图片/PDF
@@ -32,9 +42,17 @@ system_instruction = (
     "Your main capabilities include:\n"
     "- Searching for Lark documents using 'query_lark_documents'. This tool returns a list of documents with their titles, URLs, doc_tokens, and doc_types.\n"
     "- Retrieving document content (PLAIN TEXT ONLY) using 'get_lark_document_content' by providing 'doc_token' and 'doc_type'. Use this for fast text extraction.\n"
+    "- Retrieving document content via official plugin (MCP) using 'feishu_mcp_fetch_doc' for high-fidelity Markdown.\n"
     "- Retrieving rich document content (text and images) using 'get_lark_document_rich_content' by providing 'doc_token' and 'doc_type'. Use this for analyzing visual structure or inspecting images.\n"
     "- Retrieving document as a PDF using 'get_lark_document_content_pdf' by providing 'doc_token' and 'doc_type'. Use this when you need to see the document exactly as it would appear when printed/viewed.\n"
     "- Retrieving document as a Word file using 'get_lark_document_content_docx' by providing 'doc_token' and 'doc_type'. Use this for deep structural and content analysis of Word documents.\n"
+    "- Creating new documents using 'feishu_mcp_create_doc' with a title and Markdown content.\n"
+    "- Updating existing documents using 'feishu_mcp_update_doc' with new Markdown content and an update mode (append, overwrite, etc.). Prefer 'append' or 'replace_range' over 'overwrite' to preserve formatting.\n"
+    "- Saving your generated answer into a new Feishu document using 'save_ai_output_to_feishu_doc'. Prefer this tool when the user asks you to save, export, write, or archive your answer into Feishu.\n"
+    "- Saving your generated answer into an existing Feishu document using 'save_ai_output_to_existing_feishu_doc'. Use this when the user gives an existing doc_id or document URL and wants you to append or replace content.\n"
+    "- Polling document create and update async tasks using 'wait_for_feishu_doc_create_task' and 'wait_for_feishu_doc_update_task' when a write operation returns task_id.\n"
+    "- When the user explicitly asks you to save, export, write, or archive your answer into a Feishu document, first prepare clean Markdown and then use 'save_ai_output_to_feishu_doc' unless they asked to update an existing document.\n"
+    # "- Deleting documents or files using 'delete_lark_document' with the document token.\n"
     "**ALL OUTPUT MUST BE IN MARKDOWN FORMAT.**\n\n"
     "BEHAVIORAL GUIDELINES:\n"
     "1. **Search & Display**: When displaying search results, the tool returns Markdown-formatted cards for each document. Each card contains:\n"
@@ -53,6 +71,8 @@ system_instruction = (
     "   - **DO NOT HALLUCINATE**: If an image contains a chart, a table, or specific text, you must read the actual pixels of that image to provide your answer. "
     "   - **VQA MODE**: Treat the visual parts as primary evidence. If there is a conflict between the surrounding text and what you see in the image, prioritize the image content.\n"
     "   - Always answer the user's question based on the fetched content, formatting your response in Markdown.\n"
+    "   - If you create a new Feishu document for the user, return the document link and a concise note about what was written.\n"
+    "   - If a create or update tool returns task_id, prefer polling with the corresponding wait tool before replying, unless the user explicitly asked for fire-and-forget behavior.\n"
     "   - **IMPORTANT: When the tool returns images, you will see them directly in the conversation as visual content. Simply describe what you see or answer questions based on the images. The text may contain placeholders like [📷 图片 ...] to indicate the position of each image within the document structure.**\n"
     "   - **IMPORTANT: 'get_lark_document_content_pdf' and 'get_lark_document_content_docx' deliver the PDF or Word file directly to your multimodal system. You should simply apply your reasoning capabilities to read and analyze the the document content directly.**\n"
     "3. **Error Reporting**: If a tool returns a dictionary with 'status': 'error', you MUST report the exact content of 'message' or 'debug_info' to the user. Do not summarize or hide technical details, as the user needs them for debugging.\n"
@@ -71,5 +91,15 @@ root_agent = Agent(
         get_lark_document_content_pdf,
         get_lark_document_content_docx,
         get_access_token,
+        create_lark_document,
+        update_lark_document,
+        delete_lark_document,
+        feishu_mcp_create_doc,
+        feishu_mcp_update_doc,
+        feishu_mcp_fetch_doc,
+        save_ai_output_to_feishu_doc,
+        save_ai_output_to_existing_feishu_doc,
+        wait_for_feishu_doc_create_task,
+        wait_for_feishu_doc_update_task,
     ],
 )

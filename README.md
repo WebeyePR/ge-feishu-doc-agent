@@ -6,6 +6,7 @@
 
 *   **文档智能搜索**: 支持通过自然语言关键词搜索 Lark 云文档，并以 Markdown 超链接形式直观展示结果。
 *   **文档内容问答**: Agent 可以深入读取文档的具体内容（支持 Markdown 格式），并基于内容回答用户的问题。
+*   **AI 输出写入文档**: 支持将 Agent 生成的 Markdown 内容直接写入新的飞书云文档，或更新已有文档，并返回文档链接或更新结果。
 *   **安全认证**: 集成了 Lark OAuth2.0 认证流程。当检测到用户未授权时，会自动引导用户进行安全登录（Gemini Enterprise默认行为）。
 
 ## 🎥 使用演示
@@ -184,6 +185,20 @@ uv run python -m lark_agent.main
 uv run adk web
 ```
 
+### ✍️ 将 AI 输出写入飞书文档
+
+当前已支持通过飞书官方 MCP 网关创建云文档，并将 Agent 生成的 Markdown 内容写入新文档。
+
+推荐触发方式：
+
+```text
+请帮我生成一份项目周报，并直接写入飞书文档，标题叫“项目周报”
+```
+
+能力说明见：
+
+- [docs/FEISHU_DOC_SAVE_MCP_GUIDE.md](docs/FEISHU_DOC_SAVE_MCP_GUIDE.md)
+
 ---
 
 ### 🛠️ 进阶说明
@@ -209,3 +224,4 @@ uv run adk web
 *   [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - 详细的打包部署指南
 *   [scripts/README.md](scripts/README.md) - 脚本工具使用说明
 *   [docs/GEMINI_ENTERPRISE_REGISTRATION_GUIDE.md](docs/GEMINI_ENTERPRISE_REGISTRATION_GUIDE.md) - Gemini Enterprise 注册指南
+*   [docs/FEISHU_DOC_SAVE_MCP_GUIDE.md](docs/FEISHU_DOC_SAVE_MCP_GUIDE.md) - 飞书云文档写入能力说明

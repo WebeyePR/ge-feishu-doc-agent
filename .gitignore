@@ -30,6 +30,12 @@ dist/
 build/
 *.egg-info/
 
+.pytest_cache/
+.benchmarks/
+
 .deploy_env
 
 debug/
+
+node_modules/
+# lib/

@@ -4,6 +4,8 @@ import zipfile
 import xml.etree.ElementTree as ET
 import time
 import base64
+import json
+import uuid
 from urllib3.util.retry import Retry
 
 
@@ -1197,3 +1199,97 @@ def get_document_as_docx(
         )
 
     return docx_bytes
+
+
+def call_feishu_mcp_tool(
+    access_token: str, tool_name: str, arguments: dict, is_bot: bool = False
+) -> dict:
+    """
+    Directly call Feishu official MCP gateway via JSON-RPC 2.0.
+    Logic synchronized with official TS plugin and Go CLI.
+    """
+    logger.info(f"--- call_feishu_mcp_tool ---: {tool_name}")
+    url = f"{LARK_DOMAIN.replace('open.feishu.cn', 'mcp.feishu.cn').replace('open.larksuite.com', 'mcp.larksuite.com')}/mcp"
+
+    payload = {
+        "jsonrpc": "2.0",
+        "id": str(uuid.uuid4()),
+        "method": "tools/call",
+        "params": {"name": tool_name, "arguments": arguments},
+    }
+
+    headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "X-Lark-MCP-Allowed-Tools": tool_name,
+    }
+
+    if is_bot:
+        headers["X-Lark-MCP-TAT"] = access_token
+    else:
+        headers["X-Lark-MCP-UAT"] = access_token
+
+    response = _session.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+    data = response.json()
+
+    # Unwrap MCP JSON-RPC result
+    if "error" in data:
+        err = data["error"]
+        logger.error(f"MCP API Error: {err}")
+        raise Exception(f"MCP API Error [{err.get('code')}]: {err.get('message')}")
+
+    result = data.get("result", {})
+    return _normalize_mcp_tool_result(result)
+
+
+def _normalize_mcp_tool_result(raw: object) -> dict:
+    """
+    Normalize MCP tool results to the same shape used by the official CLI.
+
+    MCP commonly returns:
+    {
+        "content": [
+            {"type": "text", "text": "{\"doc_id\": \"...\", ...}"}
+        ]
+    }
+
+    For agent tools we want a structured dict so the model can reliably read fields
+    like doc_id, doc_url, message, task_id rather than parsing nested JSON-RPC text.
+    """
+    result = _extract_mcp_result(raw)
+    if isinstance(result, dict):
+        error_msg = result.get("error")
+        if isinstance(error_msg, str) and error_msg.strip():
+            raise Exception(f"MCP: {error_msg}")
+        return result
+    if isinstance(result, str):
+        return {"message": result}
+    return {"result": result}
+
+
+def _extract_mcp_result(raw: object) -> object:
+    """Extract JSON/text payload from the MCP content envelope."""
+    if not isinstance(raw, dict):
+        return raw
+
+    content = raw.get("content")
+    if not isinstance(content, list):
+        return raw
+
+    if len(content) == 1:
+        item = content[0]
+        if isinstance(item, dict) and item.get("type") == "text":
+            text = item.get("text", "")
+            if isinstance(text, str):
+                try:
+                    return json.loads(text)
+                except Exception:
+                    return text
+
+    texts = []
+    for item in content:
+        if isinstance(item, dict):
+            text = item.get("text")
+            if isinstance(text, str):
+                texts.append(text)
+    return "\n".join(texts)

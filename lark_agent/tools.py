@@ -1,10 +1,13 @@
 import logging
+import re
+import time
 
 
 from google.adk.tools import ToolContext
 
-from lark_agent.config import LARK_AUTH_ID
+from lark_agent.config import LARK_AUTH_ID, LARK_CLIENT_ID
 from lark_agent.infrastructure import lark_api_repository
+from lark_agent.infrastructure.cli_client import cli_client
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +18,26 @@ DOCUMENTS_TOKEN = "documents_token"
 
 STATUS_SUCCESS = "success"
 STATUS_ERROR = "error"
+
+
+def _normalize_markdown_for_new_doc(title: str, markdown: str) -> str:
+    """
+    Normalize generated markdown before create-doc.
+
+    Feishu MCP create-doc already uses `title` as the document title, so we strip
+    a duplicated leading H1 if it matches the title to avoid repeated headings.
+    """
+    if not markdown:
+        return markdown
+
+    normalized = markdown.strip()
+    title_clean = (title or "").strip()
+    if not title_clean:
+        return normalized
+
+    pattern = rf"^#\s+{re.escape(title_clean)}\s*(\r?\n)+"
+    normalized = re.sub(pattern, "", normalized, count=1, flags=re.IGNORECASE)
+    return normalized.strip()
 
 
 def get_access_token(tool_context: ToolContext) -> str:
@@ -249,7 +272,7 @@ def get_lark_document_content_pdf(
         doc_type: The source document type. Defaults to 'docx'.
 
     Returns:
-        list: A list containing the description and the PDF Part object.
+        dict: A dictionary containing the description and the PDF data in multimodal parts.
     """
     try:
         access_token = get_access_token(tool_context)
@@ -382,7 +405,7 @@ def get_lark_document_content_docx(
 
 def get_lark_document_rich_content(
     doc_token: str, tool_context: ToolContext, doc_type: str = "docx"
-) -> list:
+) -> dict:
     """
     Exports a Lark document and extracts its rich content, including text and images.
     Use this when you need to analyze the document's structure or inspect embedded images.
@@ -393,7 +416,7 @@ def get_lark_document_rich_content(
         doc_type: The source document type (e.g., 'docx', 'doc', 'sheet'). Defaults to 'docx'.
 
     Returns:
-        list: A sequence containing the document's text and image parts (multimodal).
+        dict: A dictionary containing the document's text and image parts.
     """
     try:
         access_token = get_access_token(tool_context)
@@ -497,3 +520,459 @@ def get_lark_document_rich_content(
             MESSAGE_KEY: f"⚠️ [TECHNICAL ERROR] Failed to get rich content for token {doc_token} (type: {doc_type}). Reason: {str(e)}",
             "debug_info": error_detail,
         }
+
+
+def create_lark_document(
+    title: str, markdown_content: str, tool_context: ToolContext, folder_token: str = ""
+) -> dict:
+    """
+    Creates a new Lark document with the specified title and Markdown content.
+
+    Args:
+        title: The title of the new document.
+        markdown_content: The content of the document in Lark-flavored Markdown.
+        tool_context: The tool execution context.
+        folder_token: Optional. The token of the parent folder where the document should be created.
+
+    Returns:
+        dict: A dictionary containing the status and document info (doc_token, url).
+    """
+    try:
+        access_token = get_access_token(tool_context)
+        if not access_token:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Authentication required."}
+
+        args = ["--title", title, "--markdown", markdown_content]
+        if folder_token:
+            args += ["--folder-token", folder_token]
+
+        result = cli_client.run_command("docs", "+create", args, access_token, LARK_CLIENT_ID)
+        return result
+    except Exception as e:
+        logger.error(f"Failed to create Lark document: {str(e)}")
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+
+def update_lark_document(
+    doc_token: str, markdown_content: str, tool_context: ToolContext, mode: str = "append"
+) -> dict:
+    """
+    Updates an existing Lark document.
+
+    Args:
+        doc_token: The unique identifier or URL of the document.
+        markdown_content: The new content or content to append in Lark-flavored Markdown.
+        tool_context: The tool execution context.
+        mode: The update mode. Options: 'append' (default), 'overwrite', 'replace_range', 'replace_all', 'insert_before', 'insert_after', 'delete_range'.
+
+    Returns:
+        dict: A dictionary containing the update status.
+    """
+    try:
+        access_token = get_access_token(tool_context)
+        if not access_token:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Authentication required."}
+
+        args = ["--doc", doc_token, "--markdown", markdown_content, "--mode", mode]
+        result = cli_client.run_command("docs", "+update", args, access_token, LARK_CLIENT_ID)
+        return result
+    except Exception as e:
+        logger.error(f"Failed to update Lark document: {str(e)}")
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+
+def delete_lark_document(doc_token: str, tool_context: ToolContext) -> dict:
+    """
+    Deletes a Lark document or file.
+
+    Args:
+        doc_token: The unique identifier or URL of the document/file.
+        tool_context: The tool execution context.
+
+    Returns:
+        dict: A dictionary containing the deletion status.
+    """
+    try:
+        access_token = get_access_token(tool_context)
+        if not access_token:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Authentication required."}
+
+        args = ["--doc", doc_token]
+        result = cli_client.run_command("drive", "+delete", args, access_token, LARK_CLIENT_ID)
+        return result
+    except Exception as e:
+        logger.error(f"Failed to delete Lark document: {str(e)}")
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+
+def feishu_mcp_create_doc(
+    title: str = "",
+    markdown: str = "",
+    tool_context: ToolContext = None,
+    folder_token: str = "",
+    wiki_node: str = "",
+    wiki_space: str = "",
+    task_id: str = "",
+) -> dict:
+    """
+    Creates a new Lark Cloud Document using the official MCP logic.
+
+    Args:
+        title: Document title. Required when task_id is not provided.
+        markdown: Content in Lark-flavored Markdown. Required when task_id is not provided.
+        tool_context: Tool execution context.
+        folder_token: Optional folder token.
+        wiki_node: Optional wiki node token or URL.
+        wiki_space: Optional wiki space ID, supports "my_library".
+        task_id: Optional async task ID for polling a previous create-doc request.
+
+    Returns:
+        dict: Structured result with status and doc fields.
+    """
+    try:
+        access_token = get_access_token(tool_context)
+        if not access_token:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Auth required."}
+
+        args = {}
+        if task_id:
+            args["task_id"] = task_id
+        else:
+            if not title.strip():
+                return {
+                    STATUS_KEY: STATUS_ERROR,
+                    MESSAGE_KEY: "title is required when task_id is not provided.",
+                }
+            if not markdown.strip():
+                return {
+                    STATUS_KEY: STATUS_ERROR,
+                    MESSAGE_KEY: "markdown is required when task_id is not provided.",
+                }
+            args["title"] = title
+            args["markdown"] = _normalize_markdown_for_new_doc(title, markdown)
+
+        if folder_token:
+            args["folder_token"] = folder_token
+        if wiki_node:
+            args["wiki_node"] = wiki_node
+        if wiki_space:
+            args["wiki_space"] = wiki_space
+
+        result = lark_api_repository.call_feishu_mcp_tool(access_token, "create-doc", args)
+        data = result.get("data") if isinstance(result.get("data"), dict) else result
+        response = {STATUS_KEY: STATUS_SUCCESS, "raw_result": result}
+        for key in ("doc_id", "doc_url", "message", "task_id", "log_id", "warnings"):
+            if key in data:
+                response[key] = data[key]
+        if "message" not in response:
+            response["message"] = "Document create request completed."
+        return response
+    except Exception as e:
+        logger.error(f"MCP Create Doc Failed: {e}")
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+
+def save_ai_output_to_feishu_doc(
+    title: str,
+    markdown_content: str,
+    tool_context: ToolContext,
+    folder_token: str = "",
+    wiki_node: str = "",
+    wiki_space: str = "",
+) -> dict:
+    """
+    Save generated AI output into a new Feishu cloud document.
+
+    This is a business-level wrapper around `feishu_mcp_create_doc` intended for
+    agent use when the user asks to write the answer into Feishu.
+    """
+    if not title.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "title is required."}
+    if not markdown_content.strip():
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: "markdown_content is required.",
+        }
+
+    result = feishu_mcp_create_doc(
+        title=title,
+        markdown=markdown_content,
+        tool_context=tool_context,
+        folder_token=folder_token,
+        wiki_node=wiki_node,
+        wiki_space=wiki_space,
+    )
+    if result.get(STATUS_KEY) != STATUS_SUCCESS:
+        return result
+
+    message = result.get("message", "Document created.")
+    doc_url = result.get("doc_url", "")
+    doc_id = result.get("doc_id", "")
+    normalized = {
+        STATUS_KEY: STATUS_SUCCESS,
+        "title": title,
+        "doc_id": doc_id,
+        "doc_url": doc_url,
+        "message": message,
+    }
+    if doc_url:
+        normalized["summary"] = f"Created document '{title}' at {doc_url}"
+    elif doc_id:
+        normalized["summary"] = f"Created document '{title}' (doc_id: {doc_id})"
+    else:
+        normalized["summary"] = f"Created document '{title}'"
+    return normalized
+
+
+def save_ai_output_to_existing_feishu_doc(
+    doc_id: str,
+    markdown_content: str,
+    tool_context: ToolContext,
+    mode: str = "append",
+    selection_with_ellipsis: str = "",
+    selection_by_title: str = "",
+    new_title: str = "",
+) -> dict:
+    """
+    Save generated AI output into an existing Feishu cloud document.
+
+    This is a business-level wrapper around `feishu_mcp_update_doc`.
+    """
+    if not doc_id.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "doc_id is required."}
+
+    requires_markdown = mode != "delete_range"
+    if requires_markdown and not markdown_content.strip():
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: "markdown_content is required for the selected mode.",
+        }
+
+    result = feishu_mcp_update_doc(
+        doc_id=doc_id,
+        markdown=markdown_content,
+        tool_context=tool_context,
+        mode=mode,
+        selection_with_ellipsis=selection_with_ellipsis,
+        selection_by_title=selection_by_title,
+        new_title=new_title,
+    )
+    if result.get(STATUS_KEY) != STATUS_SUCCESS:
+        return result
+
+    normalized = {
+        STATUS_KEY: STATUS_SUCCESS,
+        "doc_id": result.get("doc_id", doc_id),
+        "mode": result.get("mode", mode),
+        "message": result.get("message", "Document update request completed."),
+    }
+    for key in ("task_id", "warnings", "log_id", "replace_count", "success"):
+        if key in result:
+            normalized[key] = result[key]
+
+    normalized["summary"] = (
+        f"Updated document '{normalized['doc_id']}' with mode '{normalized['mode']}'"
+    )
+    return normalized
+
+
+def wait_for_feishu_doc_create_task(
+    task_id: str,
+    tool_context: ToolContext,
+    max_polls: int = 10,
+    poll_interval_seconds: float = 1.0,
+) -> dict:
+    """
+    Poll a previously submitted create-doc async task until it completes or the
+    polling window is exhausted.
+    """
+    if not task_id.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "task_id is required."}
+    if max_polls < 1:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "max_polls must be >= 1."}
+
+    last_result = None
+    for attempt in range(1, max_polls + 1):
+        result = feishu_mcp_create_doc(
+            task_id=task_id,
+            tool_context=tool_context,
+        )
+        last_result = result
+        if result.get(STATUS_KEY) != STATUS_SUCCESS:
+            return result
+        if not result.get("task_id"):
+            result["completed"] = True
+            result["poll_attempts"] = attempt
+            result["summary"] = (
+                f"Create task '{task_id}' completed after {attempt} poll(s)."
+            )
+            return result
+        if attempt < max_polls:
+            time.sleep(poll_interval_seconds)
+
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        "completed": False,
+        "task_id": task_id,
+        "poll_attempts": max_polls,
+        "message": last_result.get("message", "Create task is still running.")
+        if isinstance(last_result, dict)
+        else "Create task is still running.",
+        "summary": f"Create task '{task_id}' is still running after {max_polls} poll(s).",
+        "raw_result": last_result,
+    }
+
+
+def wait_for_feishu_doc_update_task(
+    task_id: str,
+    tool_context: ToolContext,
+    max_polls: int = 10,
+    poll_interval_seconds: float = 1.0,
+) -> dict:
+    """
+    Poll a previously submitted update-doc async task until it completes or the
+    polling window is exhausted.
+    """
+    if not task_id.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "task_id is required."}
+    if max_polls < 1:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "max_polls must be >= 1."}
+
+    last_result = None
+    for attempt in range(1, max_polls + 1):
+        result = feishu_mcp_update_doc(
+            task_id=task_id,
+            tool_context=tool_context,
+        )
+        last_result = result
+        if result.get(STATUS_KEY) != STATUS_SUCCESS:
+            return result
+        if not result.get("task_id"):
+            result["completed"] = True
+            result["poll_attempts"] = attempt
+            result["summary"] = (
+                f"Update task '{task_id}' completed after {attempt} poll(s)."
+            )
+            return result
+        if attempt < max_polls:
+            time.sleep(poll_interval_seconds)
+
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        "completed": False,
+        "task_id": task_id,
+        "poll_attempts": max_polls,
+        "message": last_result.get("message", "Update task is still running.")
+        if isinstance(last_result, dict)
+        else "Update task is still running.",
+        "summary": f"Update task '{task_id}' is still running after {max_polls} poll(s).",
+        "raw_result": last_result,
+    }
+
+
+def feishu_mcp_update_doc(
+    doc_id: str = "",
+    markdown: str = "",
+    tool_context: ToolContext = None,
+    mode: str = "append",
+    selection_with_ellipsis: str = "",
+    selection_by_title: str = "",
+    new_title: str = "",
+    task_id: str = "",
+) -> dict:
+    """
+    Updates a Lark Cloud Document using the official MCP logic.
+
+    Args:
+        doc_id: Document ID or URL.
+        markdown: Content to update.
+        tool_context: Tool execution context.
+        mode: Update mode (append, overwrite, replace_range, etc.). Default is 'append'.
+        selection_with_ellipsis: Optional content-based locator.
+        selection_by_title: Optional heading-based locator.
+        new_title: Optional new document title.
+        task_id: Optional async task ID for polling a previous update-doc request.
+
+    Returns:
+        dict: Success or error message.
+    """
+    try:
+        access_token = get_access_token(tool_context)
+        if not access_token:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Auth required."}
+
+        args = {"mode": mode}
+        if task_id:
+            args["task_id"] = task_id
+        else:
+            if not doc_id.strip():
+                return {
+                    STATUS_KEY: STATUS_ERROR,
+                    MESSAGE_KEY: "doc_id is required when task_id is not provided.",
+                }
+            args["doc_id"] = doc_id
+            if markdown:
+                args["markdown"] = markdown
+            if selection_with_ellipsis:
+                args["selection_with_ellipsis"] = selection_with_ellipsis
+            if selection_by_title:
+                args["selection_by_title"] = selection_by_title
+            if new_title:
+                args["new_title"] = new_title
+
+        result = lark_api_repository.call_feishu_mcp_tool(access_token, "update-doc", args)
+        data = result.get("data") if isinstance(result.get("data"), dict) else result
+        response = {STATUS_KEY: STATUS_SUCCESS, "raw_result": result}
+        for key in (
+            "doc_id",
+            "task_id",
+            "message",
+            "mode",
+            "warnings",
+            "log_id",
+            "replace_count",
+            "success",
+        ):
+            if key in data:
+                response[key] = data[key]
+        if "message" not in response:
+            response["message"] = "Document update request completed."
+        return response
+    except Exception as e:
+        logger.error(f"MCP Update Doc Failed: {e}")
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+
+def feishu_mcp_fetch_doc(
+    doc_id: str, tool_context: ToolContext, offset: int = 0, limit: int = 50000
+) -> dict:
+    """
+    Fetches content of a Lark Cloud Document as Markdown via MCP.
+
+    Args:
+        doc_id: Document ID or URL.
+        tool_context: Tool execution context.
+        offset: Character offset for large docs.
+        limit: Max characters to return.
+
+    Returns:
+        dict: Title and markdown content.
+    """
+    try:
+        access_token = get_access_token(tool_context)
+        if not access_token:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Auth required."}
+
+        args = {"doc_id": doc_id, "offset": offset, "limit": limit}
+        result = lark_api_repository.call_feishu_mcp_tool(access_token, "fetch-doc", args)
+        data = result.get("data") if isinstance(result.get("data"), dict) else result
+        response = {STATUS_KEY: STATUS_SUCCESS, "raw_result": result}
+        for key in ("doc_id", "title", "markdown", "content", "message", "has_more", "next_offset"):
+            if key in data:
+                response[key] = data[key]
+        if "message" not in response and "markdown" in response:
+            response["message"] = "Document fetched successfully."
+        return response
+    except Exception as e:
+        logger.error(f"MCP Fetch Doc Failed: {e}")
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
