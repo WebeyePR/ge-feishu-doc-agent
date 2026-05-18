@@ -1,0 +1,28 @@
+{
+  "scopes": {
+    "tenant": [
+      "bitable:app",
+      "docs:document:import",
+      "docx:document",
+      "drive:drive",
+      "drive:drive.metadata:readonly",
+      "drive:drive.search:readonly",
+      "drive:drive:readonly",
+      "event:ip_list",
+      "wiki:wiki",
+      "wiki:wiki:readonly"
+    ],
+    "user": [
+      "docs:document.content:read",
+      "docs:document.media:download",
+      "docs:document:export",
+      "docs:permission.setting:read",
+      "docx:document",
+      "docx:document:readonly",
+      "drive:drive.metadata:readonly",
+      "drive:export:readonly",
+      "offline_access",
+      "search:docs:read"
+    ]
+  }
+}
