@@ -1,13 +1,14 @@
 # Lark Agent (ADK Agent)
 
-这是一个基于 Google Agent Development Kit (ADK) 构建的智能对话助手，旨在帮助企业员工在统一的 AI 交互环境中，通过自然语言对话快速、安全地查询和获取 Lark (飞书) 云文档的内容。
+这是一个基于 Google Agent Development Kit (ADK) 构建的智能对话助手，旨在帮助企业员工在统一的 AI 交互环境中，通过自然语言对话快速、安全地完成飞书云文档查询、读取、创建、更新以及更多飞书生态操作。
 
 ## ✨ 主要功能
 
-*   **文档智能搜索**: 支持通过自然语言关键词搜索 Lark 云文档，并以 Markdown 超链接形式直观展示结果。
-*   **文档内容问答**: Agent 可以深入读取文档的具体内容（支持 Markdown 格式），并基于内容回答用户的问题。
-*   **AI 输出写入文档**: 支持将 Agent 生成的 Markdown 内容直接写入新的飞书云文档，或更新已有文档，并返回文档链接或更新结果。
-*   **安全认证**: 集成了 Lark OAuth2.0 认证流程。当检测到用户未授权时，会自动引导用户进行安全登录（Gemini Enterprise默认行为）。
+*   **文档智能搜索**: 支持通过自然语言关键词搜索飞书云文档，并以 Markdown 超链接形式展示结果。
+*   **文档内容问答**: 支持读取飞书文档内容，包含 Markdown 文本与多模态图片内容，并基于文档内容回答问题。
+*   **AI 输出写入文档**: 支持将 Agent 生成的 Markdown 内容写入新的飞书云文档，或追加、覆盖更新已有文档，并返回文档链接、任务状态或更新结果。
+*   **飞书生态操作扩展**: 内置 `lark-cli` 二进制，可通过 CLI 封装或通用 OpenAPI 工具扩展 Drive、Wiki、Base、Sheets、Calendar、Task、IM 等飞书能力。
+*   **安全认证**: 集成 Lark OAuth2.0 认证流程。当检测到用户未授权时，会自动引导用户登录授权（Gemini Enterprise 默认行为）。
 
 ## 🎥 使用演示
 
@@ -21,8 +22,10 @@
 
 *   **lark_agent/**: Agent 的核心逻辑。
     *   `agent.py`: 定义 `LlmAgent` 的角色、Prompt 和工具集。
-    *   `tools.py`: 定义供 Agent 调用的工具函数（Interface Adapter 层）。
-    *   `infrastructure/`: 基础设施层，包含 `lark_api_repository.py` (Lark API 调用)。
+    *   `tools.py`: 定义供 Agent 调用的工具函数，负责参数校验、授权读取、结果归一化和业务级封装。
+    *   `callbacks.py`: 处理多模态响应兼容性等运行时补丁。
+    *   `infrastructure/lark_api_repository.py`: 封装飞书 OpenAPI、文档读取和飞书 MCP 网关调用。
+    *   `infrastructure/cli_client.py`: 封装随包发布的 `lark-cli` 二进制，使用隔离 `HOME` 和环境变量传递用户态 access token。
 
 系统时序图如下所示：
 
@@ -35,10 +38,11 @@ sequenceDiagram
   participant AUTH as Authority Module
   participant DB as Firestore
   participant SM as Secret Manager
-  participant AP as Application Integration
+  participant MCP as Feishu MCP Gateway
+  participant CLI as Packaged lark-cli
   participant FS as Feishu/Lark Open Platform
 
-  U->>G: Natural language request (search / summarize / export)
+  U->>G: Natural language request (search / read / create / update / operate)
   G->>AE: Invoke Agent tool (with contextual intent)
 
   rect rgb(245,245,245)
@@ -49,10 +53,18 @@ sequenceDiagram
     AUTH-->>AE: Return valid access_token
   end
 
-  AE->>AP: Send API call (access_token + path/method/params)
-  AP->>FS: Build HTTP request to Feishu API (with access_token)
-  FS-->>AP: Return Feishu API result
-  AP-->>AE: Return result (transparent forwarding)
+  alt Document high-fidelity tools
+    AE->>MCP: JSON-RPC tool call (access_token + allowed tool)
+    MCP->>FS: Execute official MCP-backed document operation
+    FS-->>MCP: Return document result
+    MCP-->>AE: Return normalized MCP payload
+  else Broad Feishu ecosystem tools
+    AE->>CLI: Run packaged lark-cli (access_token + structured args)
+    CLI->>FS: Execute CLI/OpenAPI operation
+    FS-->>CLI: Return API result
+    CLI-->>AE: Return normalized JSON result
+  end
+
   AE-->>G: Organize results (summarization / structuring)
   G-->>U: Present output (text / list / links / export status)
 ```
@@ -171,7 +183,7 @@ bash deploy.sh
 
 **1. 本地 CLI 运行**:
 
-本地运行前请先获取飞书/Lark应用的用户访问令牌（access_token）。并替换`tools.py` 中 `access_token = tool_context.state[f"{LARK_AUTH_ID}"]` 的代码。
+本地运行会启动命令行交互。涉及飞书写操作或用户态读取时，工具会从运行上下文读取 Gemini Enterprise OAuth 注入的 access token；如需本地验证单个工具，建议直接编写测试或临时脚本传入 access token，不要修改 `tools.py` 中的授权读取逻辑。
 
 ```bash
 uv run python -m lark_agent.main
@@ -187,12 +199,16 @@ uv run adk web
 
 ### ✍️ 将 AI 输出写入飞书文档
 
-当前已支持通过飞书官方 MCP 网关创建云文档，并将 Agent 生成的 Markdown 内容写入新文档。
+当前已支持通过飞书官方 MCP 网关创建云文档，并将 Agent 生成的 Markdown 内容写入新文档或已有文档。创建、更新类操作可能返回异步 `task_id`，可继续让 Agent 查询任务状态。
 
 推荐触发方式：
 
 ```text
 请帮我生成一份项目周报，并直接写入飞书文档，标题叫“项目周报”
+```
+
+```text
+请把这段总结追加到这个飞书文档：https://...
 ```
 
 能力说明见：
