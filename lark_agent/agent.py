@@ -12,6 +12,7 @@ from .tools import (
     create_lark_document,
     update_lark_document,
     delete_lark_document,
+    execute_lark_api,
     feishu_mcp_create_doc,
     feishu_mcp_update_doc,
     feishu_mcp_fetch_doc,
@@ -22,9 +23,11 @@ from .tools import (
 )
 
 # 激活 ADK 多模态扩展：让工具能通过 FunctionResponse.parts 传递图片/PDF
-from .callbacks import patch_adk_for_multimodal
-
-patch_adk_for_multimodal()
+try:
+    from .callbacks import patch_adk_for_multimodal
+    patch_adk_for_multimodal()
+except Exception as e:
+    print(f"Warning: Failed to patch ADK for multimodal: {e}")
 
 
 if os.getenv("LOCATION", "global") == "global":
@@ -37,7 +40,7 @@ if os.getenv("LOCATION", "global") == "global":
 
 
 system_instruction = (
-    "You are a specialized assistant for querying Lark documents. "
+    "You are a specialized assistant for querying Lark documents and managing Lark workspace. "
     "**You have advanced multimodal capabilities.** When you use tools like 'get_lark_document_rich_content' or 'get_lark_document_content_pdf', the system provides you with image or PDF data. You should analyze these visual parts as if you are seeing them directly to describe images, layouts, and charts.\n\n"
     "Your main capabilities include:\n"
     "- Searching for Lark documents using 'query_lark_documents'. This tool returns a list of documents with their titles, URLs, doc_tokens, and doc_types.\n"
@@ -51,8 +54,8 @@ system_instruction = (
     "- Saving your generated answer into a new Feishu document using 'save_ai_output_to_feishu_doc'. Prefer this tool when the user asks you to save, export, write, or archive your answer into Feishu.\n"
     "- Saving your generated answer into an existing Feishu document using 'save_ai_output_to_existing_feishu_doc'. Use this when the user gives an existing doc_id or document URL and wants you to append or replace content.\n"
     "- Polling document create and update async tasks using 'wait_for_feishu_doc_create_task' and 'wait_for_feishu_doc_update_task' when a write operation returns task_id.\n"
-    "- When the user explicitly asks you to save, export, write, or archive your answer into a Feishu document, first prepare clean Markdown and then use 'save_ai_output_to_feishu_doc' unless they asked to update an existing document.\n"
-    # "- Deleting documents or files using 'delete_lark_document' with the document token.\n"
+    "- **ADVANCED LARK CAPABILITIES**: You can execute ANY Lark Open Platform API (Calendar, Bitable, Task, etc.) using 'execute_lark_api'. Use this when no specific tool exists for a user's request. Refer to official Lark API documentation for paths and parameters.\n"
+    "- Deleting documents or files using 'delete_lark_document' with the document token and its type.\n"
     "**ALL OUTPUT MUST BE IN MARKDOWN FORMAT.**\n\n"
     "BEHAVIORAL GUIDELINES:\n"
     "1. **Search & Display**: When displaying search results, the tool returns Markdown-formatted cards for each document. Each card contains:\n"
@@ -94,6 +97,7 @@ root_agent = Agent(
         create_lark_document,
         update_lark_document,
         delete_lark_document,
+        execute_lark_api,
         feishu_mcp_create_doc,
         feishu_mcp_update_doc,
         feishu_mcp_fetch_doc,

@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import time
@@ -581,13 +582,16 @@ def update_lark_document(
         return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
 
 
-def delete_lark_document(doc_token: str, tool_context: ToolContext) -> dict:
+def delete_lark_document(
+    doc_token: str, tool_context: ToolContext, doc_type: str = "docx"
+) -> dict:
     """
     Deletes a Lark document or file.
 
     Args:
         doc_token: The unique identifier or URL of the document/file.
         tool_context: The tool execution context.
+        doc_type: Optional. The type of the file (e.g., 'docx', 'doc', 'sheet', 'bitable', 'folder'). Defaults to 'docx'.
 
     Returns:
         dict: A dictionary containing the deletion status.
@@ -597,11 +601,70 @@ def delete_lark_document(doc_token: str, tool_context: ToolContext) -> dict:
         if not access_token:
             return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Authentication required."}
 
-        args = ["--doc", doc_token]
-        result = cli_client.run_command("drive", "+delete", args, access_token, LARK_CLIENT_ID)
+        # 转换 doc_type 为 CLI 预期的格式
+        type_map = {
+            "doc": "doc",
+            "docx": "docx",
+            "sheet": "sheet",
+            "bitable": "bitable",
+            "folder": "folder",
+            "file": "file",
+            "slides": "slides",
+            "mindnote": "mindnote",
+        }
+        cli_type = type_map.get(doc_type.lower(), "docx")
+
+        # 使用正确的参数名 --file-token，并添加 --yes 跳过交互式确认
+        args = ["--file-token", doc_token, "--type", cli_type, "--yes"]
+        result = cli_client.run_command(
+            "drive", "+delete", args, access_token, LARK_CLIENT_ID
+        )
         return result
     except Exception as e:
         logger.error(f"Failed to delete Lark document: {str(e)}")
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+
+def execute_lark_api(
+    method: str,
+    path: str,
+    tool_context: ToolContext,
+    params: dict = None,
+    data: dict = None,
+    file_path: str = "",
+) -> dict:
+    """
+    [Universal Tool] Executes any Lark Open API command via the Lark CLI. 
+    Use this when no specific tool is available for a desired Lark feature (e.g., Calendar, Bitable, Task).
+    Refer to the Lark Open Platform API documentation for correct paths and parameters.
+
+    Args:
+        method: HTTP method (GET, POST, PUT, DELETE, PATCH).
+        path: API endpoint path (e.g., '/open-apis/calendar/v4/calendars').
+        tool_context: The tool execution context.
+        params: Optional dictionary of query parameters.
+        data: Optional dictionary for the JSON request body.
+        file_path: Optional. Local path to a file for multipart/form-data uploads.
+
+    Returns:
+        dict: The JSON response from the Lark API.
+    """
+    try:
+        access_token = get_access_token(tool_context)
+        if not access_token:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Authentication required."}
+
+        args = [method.upper(), path]
+        if params:
+            args += ["--params", json.dumps(params)]
+        if data:
+            args += ["--data", json.dumps(data)]
+        if file_path:
+            args += ["--file", file_path]
+
+        return cli_client.run_command("api", "", args, access_token, LARK_CLIENT_ID)
+    except Exception as e:
+        logger.error(f"Universal API call failed: {str(e)}")
         return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
 
 

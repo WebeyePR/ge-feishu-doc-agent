@@ -59,6 +59,13 @@ if [ -z "$GE_APP_LOCATION" ]; then
     exit 1
 fi
 
+echo "--- [0/4] 正在检查二进制文件(Lark Cli) ---"
+if [ ! -f "bin/lark-cli" ]; then
+    echo "未发现 CLI 二进制文件，正在开始构建..."
+    bash scripts/build_cli.sh
+else
+    echo "CLI 二进制文件已存在，跳过构建。"
+fi
 
 echo "--- [1/4] 正在使用 UV 打包应用 ---"
 # 清理旧的构建文件
@@ -68,10 +75,8 @@ rm -f $DEPLOY_DIR/adk_agents-0.1.0-py3-none-any.whl
 uv build --wheel --out-dir $DEPLOY_DIR
 
 echo "--- [2/4] 正在部署到 Vertex AI Reasoning Engine ---"
-cd $DEPLOY_DIR
-# uv run 会自动管理虚拟环境并执行部署脚本
-uv run python -m deploy
-cd -
+# 在根目录运行部署脚本，确保模块导入和 PYTHONPATH 正确
+uv run python lark_agent/deployement/deploy.py
 
 # 重新加载部署生成的变量
 source scripts/load_env.sh

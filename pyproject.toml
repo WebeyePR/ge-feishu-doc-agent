@@ -12,7 +12,6 @@ dependencies = [
     "Pillow>=10.0.0",
     "langchain_google_vertexai>=3.2.2",
     "langgraph>=1.0.7",
-    "opentelemetry-instrumentation-google-genai",
     "google-genai>=1.56.0",
 ]
 
@@ -22,4 +21,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["lark_agent*"]
+
+[tool.setuptools.package-data]
+lark_agent = ["bin/lark-cli"]
 

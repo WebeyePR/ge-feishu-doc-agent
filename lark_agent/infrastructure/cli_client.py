@@ -2,6 +2,8 @@ import os
 import subprocess
 import json
 import logging
+import tempfile
+import shutil
 from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -13,21 +15,26 @@ class CLIClient:
     """
     
     def __init__(self, bin_path: Optional[str] = None):
-        # 默认在项目根目录下的 bin 目录查找二进制文件
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        
         if bin_path:
             self.bin_path = bin_path
+            return
+
+        # 1. 尝试在当前包的 bin 目录下查找 (部署后的结构)
+        # lark_agent/infrastructure/cli_client.py -> lark_agent/bin/
+        package_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        package_bin_path = os.path.join(package_root, "bin", "lark-cli")
+        
+        # 2. 尝试在项目根目录的 bin 目录下查找 (本地开发结构)
+        project_root = os.path.dirname(package_root)
+        project_bin_path = os.path.join(project_root, "bin", "lark-cli")
+
+        if os.path.exists(package_bin_path):
+            self.bin_path = package_bin_path
+        elif os.path.exists(project_bin_path):
+            self.bin_path = project_bin_path
         else:
-            # 自动识别环境选择二进制文件
-            # 如果是 Linux 环境，优先使用 lark-cli-linux
-            linux_bin = os.path.join(project_root, "bin", "lark-cli-linux")
-            default_bin = os.path.join(project_root, "bin", "lark-cli")
-            
-            if os.path.exists(linux_bin):
-                self.bin_path = linux_bin
-            else:
-                self.bin_path = default_bin
+            # 默认路径
+            self.bin_path = package_bin_path
         
         # self._check_binary()
 
@@ -46,18 +53,40 @@ class CLIClient:
                 "message": f"CLI binary not found at {self.bin_path}. Please compile it first."
             }
 
+        # 确保二进制文件具有可执行权限 (处理从 .whl 解压后权限丢失的情况)
+        try:
+            if not os.access(self.bin_path, os.X_OK):
+                os.chmod(self.bin_path, 0o755)
+        except Exception as e:
+            logger.warning(f"Failed to set executable permission on {self.bin_path}: {e}")
+
         # 设置 CLI 识别的环境变量
+        if not app_id:
+            return {"status": "error", "message": "Missing LARK_CLIENT_ID configuration."}
+        if not access_token:
+            return {"status": "error", "message": "Missing User Access Token."}
+
+        # 创建临时的 HOME 目录以实现请求间的完全隔离
+        tmp_home = tempfile.mkdtemp(prefix="lark_cli_")
+        
         env = os.environ.copy()
-        env["LARKSUITE_CLI_APP_ID"] = app_id
-        env["LARKSUITE_CLI_USER_ACCESS_TOKEN"] = access_token
+        env["HOME"] = tmp_home
+        env["LARKSUITE_CLI_APP_ID"] = str(app_id)
+        env["LARKSUITE_CLI_USER_ACCESS_TOKEN"] = str(access_token)
         # 禁用更新检查和技能同步通知，确保输出纯净
         env["LARKSUITE_CLI_NO_UPDATE_NOTIFIER"] = "1"
         env["LARKSUITE_CLI_NO_SKILLS_NOTIFIER"] = "1"
 
-        full_args = [self.bin_path, service, command] + args
+        # 构建命令参数
+        full_args = [self.bin_path]
+        if service:
+            full_args.append(service)
+        if command:
+            full_args.append(command)
+        full_args.extend(args)
         
         try:
-            logger.info(f"Executing CLI command: {' '.join(full_args)}")
+            logger.info(f"Executing CLI command in isolated home {tmp_home}: {' '.join(full_args)}")
             result = subprocess.run(
                 full_args,
                 env=env,
@@ -83,5 +112,11 @@ class CLIClient:
         except Exception as e:
             logger.error(f"Failed to execute CLI command: {str(e)}")
             return {"status": "error", "message": str(e)}
+        finally:
+            # 执行完毕后清理临时目录
+            try:
+                shutil.rmtree(tmp_home, ignore_errors=True)
+            except:
+                pass
 
 cli_client = CLIClient()
