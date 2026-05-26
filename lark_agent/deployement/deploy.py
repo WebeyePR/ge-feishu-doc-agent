@@ -1,5 +1,6 @@
 import os
 import socket
+import tomllib
 from concurrent.futures import TimeoutError as FuturesTimeoutError
 
 import dotenv
@@ -7,9 +8,9 @@ import vertexai
 from google.api_core.future import polling
 from vertexai import agent_engines
 
-from lark_agent import root_agent
-
 dotenv.load_dotenv()
+
+from lark_agent import root_agent
 
 PYTHONPATH = os.environ.get("PYTHONPATH", ".")
 
@@ -28,9 +29,23 @@ AGENT_WHL_FILE = os.path.join(CURRENT_DIR, AGENT_WHL_FILE_NAME)
 # 专门用于存储部署过程中自动生成的参数，位于项目根目录
 ROOT_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))
 DEPLOY_ENV_FILE = os.path.join(ROOT_DIR, ".deploy_env")
+PYPROJECT_FILE = os.path.join(ROOT_DIR, "pyproject.toml")
+
+
+def load_project_requirements(pyproject_file: str) -> list[str]:
+    """
+    Read runtime dependencies from pyproject.toml so deployment has a single
+    source of truth for requirements.
+    """
+    with open(pyproject_file, "rb") as f:
+        data = tomllib.load(f)
+    deps = data.get("project", {}).get("dependencies", [])
+    if not deps:
+        raise ValueError(f"No project.dependencies found in {pyproject_file}")
+    return deps
 
 # 增加全局网络超时时间，处理大包上传（如 lark-cli 二进制文件）
-socket.setdefaulttimeout(600)  # 设置为 10 分钟
+socket.setdefaulttimeout(1800)  # 设置为 10 分钟
 
 # 尝试通过猴子补丁 (Monkey Patch) 解决 google-cloud-storage 内部上传超时问题
 try:
@@ -42,37 +57,37 @@ try:
     # 我们尝试覆盖 Blob 对象的默认上传行为或重试策略
     def patched_upload_from_string(self, data, *args, **kwargs):
         if "timeout" not in kwargs:
-            kwargs["timeout"] = 600  # 强制设置 10 分钟超时
+            kwargs["timeout"] = 1800  # 强制设置 10 分钟超时
         if "retry" not in kwargs or kwargs["retry"] is DEFAULT_RETRY:
-            kwargs["retry"] = DEFAULT_RETRY.with_timeout(600)
+            kwargs["retry"] = DEFAULT_RETRY.with_timeout(1800)
         return self._old_upload_from_string(data, *args, **kwargs)
 
     def patched_upload_from_file(self, file_obj, *args, **kwargs):
         if "timeout" not in kwargs:
-            kwargs["timeout"] = 600
+            kwargs["timeout"] = 1800
         if "retry" not in kwargs or kwargs["retry"] is DEFAULT_RETRY:
-            kwargs["retry"] = DEFAULT_RETRY.with_timeout(600)
+            kwargs["retry"] = DEFAULT_RETRY.with_timeout(1800)
         return self._old_upload_from_file(file_obj, *args, **kwargs)
 
     if not hasattr(storage.blob.Blob, "_old_upload_from_string"):
         storage.blob.Blob._old_upload_from_string = storage.blob.Blob.upload_from_string
         storage.blob.Blob.upload_from_string = patched_upload_from_string
-        print("Patched google.cloud.storage.blob.Blob.upload_from_string with 600s timeout.")
+        print("Patched google.cloud.storage.blob.Blob.upload_from_string with 1800s timeout.")
 
     if not hasattr(storage.blob.Blob, "_old_upload_from_file"):
         storage.blob.Blob._old_upload_from_file = storage.blob.Blob.upload_from_file
         storage.blob.Blob.upload_from_file = patched_upload_from_file
-        print("Patched google.cloud.storage.blob.Blob.upload_from_file with 600s timeout.")
+        print("Patched google.cloud.storage.blob.Blob.upload_from_file with 1800s timeout.")
 
     # 针对 Retry 策略的截止时间进行补丁
     # vertex ai sdk 内部可能使用了带有默认 deadline 的 retry
     _old_retry_init = retry.Retry.__init__
     def patched_retry_init(self, *args, **kwargs):
         if "deadline" in kwargs and kwargs["deadline"] == 120.0:
-            kwargs["deadline"] = 600.0
+            kwargs["deadline"] = 1800.0
         _old_retry_init(self, *args, **kwargs)
     retry.Retry.__init__ = patched_retry_init
-    print("Patched google.api_core.retry.Retry deadline to 600s.")
+    print("Patched google.api_core.retry.Retry deadline to 1800s.")
 except ImportError:
     pass
 
@@ -115,19 +130,22 @@ try:
     # pyproject.toml, so runtime dependencies still have a single source of
     # truth while the lark_agent package itself is installed before unpickling.
     os.chdir(CURRENT_DIR)
-    requirements_source = [AGENT_WHL_FILE_NAME]
-    extra_packages_source = [AGENT_WHL_FILE_NAME]
-    print(f"Deploying using local wheel requirement: {requirements_source}")
+    requirements_source = [AGENT_WHL_FILE_NAME] + load_project_requirements(PYPROJECT_FILE)
+    print(f"Deploying using pyproject.toml requirements: {requirements_source}")
 
     remote_app = agent_engines.create(
         agent_engine=app,
         requirements=requirements_source,
-        extra_packages=extra_packages_source,
+        extra_packages=[AGENT_WHL_FILE_NAME],
         display_name=os.getenv("AGENT_DISPLAY_NAME", "Lark Document Agent"),
         env_vars={
             "LARK_AUTH_ID": os.getenv("LARK_AUTH_ID"),
             "LARK_DOMAIN": os.getenv("LARK_DOMAIN"),
             "LARK_CLIENT_ID": os.getenv("LARK_CLIENT_ID"),
+            "GOOGLE_WORKSPACE_AUTH_ID": os.getenv("GOOGLE_WORKSPACE_AUTH_ID"),
+            "GOOGLE_WORKSPACE_PROJECT_ID": os.getenv(
+                "GOOGLE_WORKSPACE_PROJECT_ID", os.getenv("PROJECT_ID")
+            ),
         },
     )
 except FuturesTimeoutError as e:

@@ -38,4 +38,6 @@ build/
 debug/
 
 node_modules/
-# lib/
+
+lib/
+.adk/

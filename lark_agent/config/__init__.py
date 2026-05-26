@@ -14,3 +14,6 @@ logger = logging.getLogger(__name__)
 LARK_AUTH_ID = os.getenv("LARK_AUTH_ID", "lark-agent-oauth_v1")
 LARK_DOMAIN = os.getenv("LARK_DOMAIN", "https://open.feishu.cn")
 LARK_CLIENT_ID = os.getenv("LARK_CLIENT_ID")
+
+GOOGLE_WORKSPACE_AUTH_ID = os.getenv("GOOGLE_WORKSPACE_AUTH_ID", "google-workspace-oauth_v1")
+GOOGLE_WORKSPACE_PROJECT_ID = os.getenv("GOOGLE_WORKSPACE_PROJECT_ID", os.getenv("PROJECT_ID", ""))

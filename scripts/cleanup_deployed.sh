@@ -47,6 +47,13 @@ else
     echo "⏭️  跳过授权资源删除: 未在 .env 中找到 LARK_AUTH_ID"
 fi
 
+if [ -n "$GOOGLE_WORKSPACE_AUTH_ID" ]; then
+    # 注意：如果授权资源被其他 Agent 使用，脚本内部会返回错误响应
+    bash "$SCRIPT_DIR/delete_authorization.sh" "$GOOGLE_WORKSPACE_AUTH_ID"
+else
+    echo "⏭️  跳过授权资源删除: 未在 .env 中找到 GOOGLE_WORKSPACE_AUTH_ID"
+fi
+
 # 4. 删除 Vertex AI Reasoning Engine
 if [ -n "$VERTEX_REASONING_ENGINE_NAME" ]; then
     bash "$SCRIPT_DIR/delete_reasoning_engine.sh" "$VERTEX_REASONING_ENGINE_NAME"

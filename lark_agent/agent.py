@@ -20,6 +20,15 @@ from .tools import (
     save_ai_output_to_existing_feishu_doc,
     wait_for_feishu_doc_create_task,
     wait_for_feishu_doc_update_task,
+    search_google_drive_files,
+    append_google_doc_text,
+    read_google_sheet_range,
+    append_google_sheet_rows,
+    list_google_calendar_events,
+    create_google_calendar_event,
+    discover_google_workspace_operations,
+    get_google_workspace_operation_schema,
+    execute_google_workspace_cli,
 )
 
 # 激活 ADK 多模态扩展：让工具能通过 FunctionResponse.parts 传递图片/PDF
@@ -56,6 +65,9 @@ system_instruction = (
     "- Polling document create and update async tasks using 'wait_for_feishu_doc_create_task' and 'wait_for_feishu_doc_update_task' when a write operation returns task_id.\n"
     "- **ADVANCED LARK CAPABILITIES**: You can execute ANY Lark Open Platform API (Calendar, Bitable, Task, etc.) using 'execute_lark_api'. Use this when no specific tool exists for a user's request. Refer to official Lark API documentation for paths and parameters.\n"
     "- Deleting documents or files using 'delete_lark_document' with the document token and its type.\n"
+    "- **GOOGLE WORKSPACE CAPABILITIES**: When the user asks to operate Google Workspace, use the dedicated Google Workspace tools backed by the packaged `gws` CLI. Available tools include searching Drive files, appending plain text to Google Docs, reading/appending Google Sheets ranges, listing Calendar events, and creating Calendar events.\n"
+    "- For long-tail Google Workspace operations, first use 'discover_google_workspace_operations' and 'get_google_workspace_operation_schema', then use 'execute_google_workspace_cli' with a JSON array of gws arguments. Prefer dedicated tools for common workflows.\n"
+    "- For Google Workspace write operations, prefer concise, explicit parameters. Times for Calendar event creation must be RFC3339 timestamps with timezone offsets. Generic mutating gws commands should be dry-run first unless the user explicitly confirms execution.\n"
     "**ALL OUTPUT MUST BE IN MARKDOWN FORMAT.**\n\n"
     "BEHAVIORAL GUIDELINES:\n"
     "1. **Search & Display**: When displaying search results, the tool returns Markdown-formatted cards for each document. Each card contains:\n"
@@ -105,5 +117,21 @@ root_agent = Agent(
         save_ai_output_to_existing_feishu_doc,
         wait_for_feishu_doc_create_task,
         wait_for_feishu_doc_update_task,
+        search_google_drive_files,
+        append_google_doc_text,
+        read_google_sheet_range,
+        append_google_sheet_rows,
+        list_google_calendar_events,
+        create_google_calendar_event,
+        discover_google_workspace_operations,
+        get_google_workspace_operation_schema,
+        execute_google_workspace_cli,
     ],
 )
+
+# 兼容性修复：为 google-adk 新版本添加 mode 属性
+try:
+    if not hasattr(root_agent, "mode"):
+        root_agent.mode = os.getenv("MODEL_NAME", "gemini-3-flash-preview")
+except Exception:
+    pass

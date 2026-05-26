@@ -1,6 +1,33 @@
 import json
 import os
-from urllib.parse import quote, urlparse, parse_qs, urlencode
+from urllib.parse import parse_qs, quote, urlparse
+
+URL_LENGTH_WARNING_THRESHOLD = 4000
+
+
+def build_auth_url(base_url: str, params: dict) -> str:
+    query_parts = []
+    for key, value in params.items():
+        encoded_key = quote(str(key), safe="")
+        if key == "scope":
+            encoded_value = quote(str(value), safe=":")
+        else:
+            encoded_value = quote(str(value), safe="")
+        query_parts.append(f"{encoded_key}={encoded_value}")
+    return f"{base_url}?{'&'.join(query_parts)}"
+
+
+def build_length_warning(auth_url: str, scope_count: int) -> str:
+    if len(auth_url) <= URL_LENGTH_WARNING_THRESHOLD:
+        return ""
+
+    return (
+        f"警告: 授权链接长度为 {len(auth_url)} 字符，包含 {scope_count} 个 scope，"
+        f"已超过 {URL_LENGTH_WARNING_THRESHOLD} 字符的保守阈值。\n"
+        "这可能在浏览器、代理、网关或飞书授权服务前置层触发 HTTP 431。\n"
+        "建议按场景精简 scope，或在 Gemini Enterprise Authorization 资源中使用 serverSideOauth2.scopes。"
+    )
+
 
 def generate_lark_auth_url():
     # 1. 尝试加载 .env 文件获取配置
@@ -61,16 +88,17 @@ def generate_lark_auth_url():
     if redirect_uri:
         params["redirect_uri"] = redirect_uri
 
-    # 使用 urlencode 构造查询字符串
-    # 飞书要求 scope 里的空格转义为 %20，urlencode 默认也是这样处理的
-    query_string = urlencode(params, quote_via=quote)
-    final_url = f"{base_url}?{query_string}"
+    final_url = build_auth_url(base_url, params)
 
     print("-" * 50)
     print("成功生成飞书授权链接！")
     print("-" * 50)
     print(f"\n{final_url}\n")
     print("-" * 50)
+    length_warning = build_length_warning(final_url, len(all_scopes))
+    if length_warning:
+        print(length_warning)
+        print("-" * 50)
     print("操作建议：")
     print("1. 确保已在飞书开放平台后台勾选了 lark_scopes.json 中的所有权限并发布版本。")
     print("2. 将上述链接更新到 .env 文件的 LARK_AUTHORIZATION_URI 变量中。")

@@ -76,6 +76,11 @@ def patch_adk_for_multimodal():
                 f"{len(multimodal_parts) if multimodal_parts else 0} 个多媒体 parts"
             )
 
+        if not multimodal_parts:
+            return original_build(
+                tool, function_result, tool_context, invocation_context
+            )
+
         # 2. 确保 function_result 是 dict（ADK spec 要求）
         if not isinstance(function_result, dict):
             function_result = {"result": function_result}

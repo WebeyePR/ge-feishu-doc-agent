@@ -59,12 +59,19 @@ if [ -z "$GE_APP_LOCATION" ]; then
     exit 1
 fi
 
-echo "--- [0/4] 正在检查二进制文件(Lark Cli) ---"
-if [ ! -f "bin/lark-cli" ]; then
+echo "--- [0/4] 正在检查二进制文件(Lark CLI) ---"
+if [ ! -f "lark_agent/bin/lark-cli" ]; then
     echo "未发现 CLI 二进制文件，正在开始构建..."
     bash scripts/build_cli.sh
 else
     echo "CLI 二进制文件已存在，跳过构建。"
+fi
+
+echo "--- [0/4] 正在检查二进制文件(Google Workspace CLI) ---"
+if [ ! -f "lark_agent/bin/gws" ]; then
+    echo "错误: 未发现 Google Workspace CLI 二进制文件: lark_agent/bin/gws"
+    echo "请从 googleworkspace/cli release 下载 Linux amd64 版本并放入 lark_agent/bin/gws。"
+    exit 1
 fi
 
 echo "--- [1/4] 正在使用 UV 打包应用 ---"

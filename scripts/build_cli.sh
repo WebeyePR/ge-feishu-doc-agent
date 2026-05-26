@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==============================================================================
-# Lark CLI 跨平台构建脚本 (支持版本锁定与自动下载)
+# Lark CLI 构建脚本 (部署/本地统一使用 lark_agent/bin)
 # ==============================================================================
 
 set -e
@@ -17,6 +17,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LIB_DIR="$PROJECT_ROOT/lib"
 SPECIFIC_CLI_DIR="$LIB_DIR/lark-cli-$CLI_VERSION"
 TARGET_DIR="$PROJECT_ROOT/lark_agent/bin"
+TARGET_BIN="$TARGET_DIR/lark-cli"
 
 mkdir -p "$TARGET_DIR"
 mkdir -p "$LIB_DIR"
@@ -44,16 +45,11 @@ cd "$SPECIFIC_CLI_DIR"
 LDFLAGS="-s -w -X github.com/larksuite/cli/internal/build.Version=${CLI_VERSION} -X github.com/larksuite/cli/internal/build.Date=$(date +%Y-%m-%d)"
 
 # 4. 执行编译
-# 4.1 为云端部署构建 Linux 二进制文件 (Reasoning Engine 使用 Linux 环境)
-echo "正在为云端部署构建 Linux (amd64) 二进制文件..."
-GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o "$TARGET_DIR/lark-cli" .
-echo "成功: $TARGET_DIR/lark-cli (Linux amd64)"
-
-# 4.2 为本地调试构建当前平台的二进制文件 (可选)
-LOCAL_BIN="$PROJECT_ROOT/bin/lark-cli"
-mkdir -p "$(dirname "$LOCAL_BIN")"
-echo "正在为本地调试构建当前平台二进制文件..."
-go build -ldflags "$LDFLAGS" -o "$LOCAL_BIN" .
-echo "成功: $LOCAL_BIN (Local)"
+# 部署和本地运行统一使用 lark_agent/bin 下的 Linux amd64 二进制。
+# 注意：该二进制面向 Agent Engine / Linux 环境，本地 macOS 不直接执行 CLI。
+echo "正在构建统一 CLI 二进制: Linux (amd64)..."
+GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o "$TARGET_BIN" .
+chmod +x "$TARGET_BIN"
+echo "成功: $TARGET_BIN (Linux amd64)"
 
 echo "--- 构建完成 ($CLI_VERSION) ---"

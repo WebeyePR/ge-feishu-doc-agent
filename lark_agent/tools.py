@@ -6,9 +6,14 @@ import time
 
 from google.adk.tools import ToolContext
 
-from lark_agent.config import LARK_AUTH_ID, LARK_CLIENT_ID
+from lark_agent.config import (
+    GOOGLE_WORKSPACE_AUTH_ID,
+    GOOGLE_WORKSPACE_PROJECT_ID,
+    LARK_AUTH_ID,
+    LARK_CLIENT_ID,
+)
 from lark_agent.infrastructure import lark_api_repository
-from lark_agent.infrastructure.cli_client import cli_client
+from lark_agent.infrastructure.cli_client import cli_client, gws_cli_client
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +24,55 @@ DOCUMENTS_TOKEN = "documents_token"
 
 STATUS_SUCCESS = "success"
 STATUS_ERROR = "error"
+
+GWS_ALLOWED_SERVICES = {
+    "admin",
+    "calendar",
+    "chat",
+    "docs",
+    "drive",
+    "gmail",
+    "people",
+    "sheets",
+    "slides",
+    "tasks",
+}
+GWS_SAFE_META_COMMANDS = {"schema", "--help", "help", "--version", "version"}
+GWS_MUTATING_METHODS = {
+    "append",
+    "batchclear",
+    "batchdelete",
+    "batchupdate",
+    "clear",
+    "copy",
+    "create",
+    "delete",
+    "emptytrash",
+    "import",
+    "insert",
+    "modify",
+    "move",
+    "patch",
+    "remove",
+    "send",
+    "set",
+    "stop",
+    "trash",
+    "undelete",
+    "untrash",
+    "update",
+    "watch",
+}
+GWS_MUTATING_HELPERS = {
+    "+append",
+    "+forward",
+    "+insert",
+    "+reply",
+    "+reply-all",
+    "+send",
+    "+upload",
+    "+write",
+}
 
 
 def _normalize_markdown_for_new_doc(title: str, markdown: str) -> str:
@@ -49,6 +103,408 @@ def get_access_token(tool_context: ToolContext) -> str:
         return tool_context
     else:
         return tool_context.state.get(f"{LARK_AUTH_ID}")
+
+
+def get_google_workspace_access_token(tool_context: ToolContext) -> str:
+    """
+    Get the Google Workspace access token from the tool context.
+
+    The expected token should carry the Workspace scopes needed by the target
+    gws command. The CLI only consumes access tokens; refresh must happen in the
+    surrounding OAuth integration.
+    """
+    if isinstance(tool_context, str):
+        return tool_context
+    return tool_context.state.get(f"{GOOGLE_WORKSPACE_AUTH_ID}")
+
+
+def _run_google_workspace_cli(args: list, tool_context: ToolContext, timeout_seconds: int = 120) -> dict:
+    access_token = get_google_workspace_access_token(tool_context)
+    if not access_token:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: (
+                "Google Workspace authentication required. "
+                f"Missing token in tool_context.state['{GOOGLE_WORKSPACE_AUTH_ID}']."
+            ),
+        }
+    return gws_cli_client.run_command(
+        args=args,
+        access_token=access_token,
+        project_id=GOOGLE_WORKSPACE_PROJECT_ID,
+        timeout_seconds=timeout_seconds,
+    )
+
+
+def _safe_limit(value: int, default: int, minimum: int, maximum: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = default
+    return max(minimum, min(parsed, maximum))
+
+
+def _escape_google_query_literal(value: str) -> str:
+    return (value or "").replace("\\", "\\\\").replace("'", "\\'")
+
+
+def _coerce_json_cli_arg(value, field_name: str) -> str:
+    """
+    Convert a JSON string or Python object into a CLI JSON argument.
+
+    ADK/Gemini currently rejects free-form dict schemas because they are emitted
+    with `additional_properties`. Tool-facing parameters therefore use strings,
+    while this helper keeps direct Python calls backward compatible.
+    """
+    if value in (None, ""):
+        return ""
+    if isinstance(value, str):
+        try:
+            json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"{field_name} must be a valid JSON string: {exc}") from exc
+        return value
+    return json.dumps(value, ensure_ascii=False)
+
+
+def _parse_json_array_arg(value, field_name: str) -> list:
+    """
+    Parse a JSON array string while keeping direct Python list calls compatible.
+    """
+    if isinstance(value, list):
+        return value
+    if value in (None, ""):
+        return []
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} must be a JSON array string.")
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{field_name} must be a valid JSON array string: {exc}") from exc
+    if not isinstance(parsed, list):
+        raise ValueError(f"{field_name} must be a JSON array string.")
+    return parsed
+
+
+def _parse_gws_args(args_json: str) -> list:
+    args = _parse_json_array_arg(args_json, "args_json")
+    if not args:
+        raise ValueError("args_json must be a non-empty JSON array.")
+    if len(args) > 40:
+        raise ValueError("args_json must contain at most 40 arguments.")
+    normalized = []
+    for arg in args:
+        if not isinstance(arg, str):
+            raise ValueError("args_json must contain strings only.")
+        if "\x00" in arg or "\n" in arg or "\r" in arg:
+            raise ValueError("args_json arguments must not contain control characters.")
+        if len(arg) > 20000:
+            raise ValueError("args_json contains an argument that is too long.")
+        normalized.append(arg)
+    return normalized
+
+
+def _is_gws_mutating_args(args: list) -> bool:
+    normalized_args = [arg.lower() for arg in args]
+    if any(arg in GWS_MUTATING_HELPERS for arg in normalized_args):
+        return True
+    if any(arg == "--upload" for arg in normalized_args):
+        return True
+    return any(arg.split(".")[-1] in GWS_MUTATING_METHODS for arg in normalized_args)
+
+
+def _parse_gws_resource_path(resource: str) -> list:
+    if not resource or not resource.strip():
+        return []
+
+    parts = resource.strip().split()
+    for part in parts:
+        if part.startswith("-") or "/" in part or ".." in part:
+            raise ValueError("resource contains an invalid path segment.")
+        if "\x00" in part or "\n" in part or "\r" in part:
+            raise ValueError("resource must not contain control characters.")
+    return parts
+
+
+def _validate_gws_args(args: list, allow_mutating: bool) -> None:
+    first = args[0]
+    if first.startswith("-") and first not in GWS_SAFE_META_COMMANDS:
+        raise ValueError("First gws argument must be a service name or a safe meta command.")
+    if first not in GWS_ALLOWED_SERVICES and first not in GWS_SAFE_META_COMMANDS:
+        raise ValueError(
+            "Unsupported gws service. Allowed services: "
+            + ", ".join(sorted(GWS_ALLOWED_SERVICES))
+            + "."
+        )
+
+    blocked_flags = {
+        "--output",
+        "--output-dir",
+        "--dir",
+        "--credentials",
+        "--credentials-file",
+    }
+    for arg in args:
+        if arg.startswith("/") or ".." in arg:
+            raise ValueError("Absolute paths and parent-directory traversal are not allowed.")
+        if arg in blocked_flags:
+            raise ValueError(f"Flag {arg} is not allowed in the generic gws executor.")
+
+    mutating = _is_gws_mutating_args(args)
+    if mutating and not allow_mutating and "--dry-run" not in args:
+        raise ValueError(
+            "This gws command appears to mutate data. Re-run with dry_run=True for preview "
+            "or allow_mutating=True after explicit user confirmation."
+        )
+
+
+def discover_google_workspace_operations(
+    service: str = "",
+    resource: str = "",
+    tool_context: ToolContext = None,
+) -> dict:
+    """
+    Discover Google Workspace CLI operations via gws help output.
+
+    Args:
+        service: Optional gws service name, e.g. drive, sheets, gmail.
+        resource: Optional resource path under the service, separated by spaces, e.g. "files".
+        tool_context: Tool execution context containing the Google Workspace OAuth token.
+    """
+    args = []
+    if service and service.strip():
+        service_name = service.strip()
+        if service_name not in GWS_ALLOWED_SERVICES:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported gws service: {service_name}"}
+        args.append(service_name)
+    try:
+        args.extend(_parse_gws_resource_path(resource))
+    except ValueError as e:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+    args.append("--help")
+    return _run_google_workspace_cli(args, tool_context, timeout_seconds=60)
+
+
+def get_google_workspace_operation_schema(method_path: str, tool_context: ToolContext) -> dict:
+    """
+    Fetch a gws operation schema, e.g. drive.files.list or sheets.spreadsheets.create.
+    """
+    if not method_path or not method_path.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "method_path is required."}
+    safe_method = method_path.strip()
+    if safe_method.startswith("-") or "/" in safe_method or ".." in safe_method:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "method_path is invalid."}
+    service = safe_method.split(".", 1)[0]
+    if service not in GWS_ALLOWED_SERVICES:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported gws service: {service}"}
+    return _run_google_workspace_cli(["schema", safe_method], tool_context, timeout_seconds=60)
+
+
+def execute_google_workspace_cli(
+    args_json: str,
+    tool_context: ToolContext,
+    dry_run: bool = True,
+    allow_mutating: bool = False,
+    timeout_seconds: int = 120,
+) -> dict:
+    """
+    Execute a controlled Google Workspace CLI command.
+
+    Args:
+        args_json: JSON array of gws arguments, without the binary name. Example:
+            ["drive", "files", "list", "--params", "{\"pageSize\":10}", "--fields", "files(id,name)"]
+        tool_context: Tool execution context containing the Google Workspace OAuth token.
+        dry_run: If True, append --dry-run to mutating commands that do not already include it.
+        allow_mutating: Must be True to run mutating commands without --dry-run.
+        timeout_seconds: Command timeout, capped to 300 seconds.
+    """
+    try:
+        args = _parse_gws_args(args_json)
+        if dry_run and _is_gws_mutating_args(args) and "--dry-run" not in args:
+            args.append("--dry-run")
+        _validate_gws_args(args, allow_mutating=allow_mutating)
+    except ValueError as e:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+    timeout_seconds = _safe_limit(timeout_seconds, default=120, minimum=10, maximum=300)
+    return _run_google_workspace_cli(args, tool_context, timeout_seconds=timeout_seconds)
+
+
+def search_google_drive_files(query: str, tool_context: ToolContext, page_size: int = 10) -> dict:
+    """
+    Search Google Drive files for the authenticated Google Workspace user.
+
+    Args:
+        query: Keyword to match in file names. Empty query lists recent non-trashed files.
+        tool_context: Tool execution context containing the Google Workspace OAuth token.
+        page_size: Maximum number of files to return. Capped to 25 for context safety.
+
+    Returns:
+        dict: Normalized gws JSON result.
+    """
+    page_size = _safe_limit(page_size, default=10, minimum=1, maximum=25)
+    drive_query = "trashed = false"
+    if query and query.strip():
+        drive_query = f"name contains '{_escape_google_query_literal(query.strip())}' and trashed = false"
+
+    fields = "files(id,name,mimeType,webViewLink,modifiedTime),nextPageToken"
+    params = {"q": drive_query, "pageSize": page_size}
+    return _run_google_workspace_cli(
+        [
+            "drive",
+            "files",
+            "list",
+            "--params",
+            json.dumps(params, ensure_ascii=False),
+            "--fields",
+            fields,
+        ],
+        tool_context,
+    )
+
+
+def append_google_doc_text(document_id: str, text: str, tool_context: ToolContext) -> dict:
+    """
+    Append plain text to a Google Docs document using gws docs +write.
+
+    This helper intentionally supports plain text only. Rich formatting should
+    be implemented later with a dedicated, reviewed Docs batchUpdate wrapper.
+    """
+    if not document_id or not document_id.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "document_id is required."}
+    if not text:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "text is required."}
+
+    return _run_google_workspace_cli(
+        ["docs", "+write", "--document", document_id.strip(), "--text", text],
+        tool_context,
+    )
+
+
+def read_google_sheet_range(spreadsheet_id: str, range_name: str, tool_context: ToolContext) -> dict:
+    """
+    Read values from a Google Sheets range using gws sheets +read.
+    """
+    if not spreadsheet_id or not spreadsheet_id.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "spreadsheet_id is required."}
+    if not range_name or not range_name.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "range_name is required."}
+
+    return _run_google_workspace_cli(
+        [
+            "sheets",
+            "+read",
+            "--spreadsheet",
+            spreadsheet_id.strip(),
+            "--range",
+            range_name.strip(),
+        ],
+        tool_context,
+    )
+
+
+def append_google_sheet_rows(spreadsheet_id: str, values_json: str, tool_context: ToolContext) -> dict:
+    """
+    Append rows to a Google Sheet using gws sheets +append.
+
+    Args:
+        spreadsheet_id: Google Spreadsheet ID.
+        values_json: JSON array string. Use one row like ["a", "b"] or multiple rows like [["a", "b"]].
+        tool_context: Tool execution context containing the Google Workspace OAuth token.
+    """
+    if not spreadsheet_id or not spreadsheet_id.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "spreadsheet_id is required."}
+    try:
+        values = _parse_json_array_arg(values_json, "values_json")
+    except ValueError as e:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+    if not values:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "values_json must be a non-empty JSON array."}
+
+    rows = values if isinstance(values[0], list) else [values]
+    return _run_google_workspace_cli(
+        [
+            "sheets",
+            "+append",
+            "--spreadsheet",
+            spreadsheet_id.strip(),
+            "--json-values",
+            json.dumps(rows, ensure_ascii=False),
+        ],
+        tool_context,
+    )
+
+
+def list_google_calendar_events(
+    tool_context: ToolContext,
+    days: int = 7,
+    calendar: str = "",
+    timezone: str = "",
+) -> dict:
+    """
+    List upcoming Google Calendar events using gws calendar +agenda.
+    """
+    days = _safe_limit(days, default=7, minimum=1, maximum=31)
+    args = ["calendar", "+agenda", "--days", str(days), "--format", "json"]
+    if calendar and calendar.strip():
+        args += ["--calendar", calendar.strip()]
+    if timezone and timezone.strip():
+        args += ["--timezone", timezone.strip()]
+    return _run_google_workspace_cli(args, tool_context)
+
+
+def create_google_calendar_event(
+    summary: str,
+    start: str,
+    end: str,
+    tool_context: ToolContext,
+    calendar: str = "primary",
+    description: str = "",
+    location: str = "",
+    attendees_json: str = "",
+    add_meet: bool = False,
+) -> dict:
+    """
+    Create a Google Calendar event using gws calendar +insert.
+
+    start and end must be RFC3339 timestamps, for example
+    2026-06-17T09:00:00+08:00.
+    """
+    if not summary or not summary.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "summary is required."}
+    if not start or not start.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "start is required."}
+    if not end or not end.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "end is required."}
+
+    args = [
+        "calendar",
+        "+insert",
+        "--calendar",
+        (calendar or "primary").strip(),
+        "--summary",
+        summary.strip(),
+        "--start",
+        start.strip(),
+        "--end",
+        end.strip(),
+    ]
+    if description and description.strip():
+        args += ["--description", description.strip()]
+    if location and location.strip():
+        args += ["--location", location.strip()]
+    try:
+        attendees = _parse_json_array_arg(attendees_json, "attendees_json")
+    except ValueError as e:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+    if attendees:
+        for attendee in attendees:
+            if attendee:
+                args += ["--attendee", str(attendee).strip()]
+    if add_meet:
+        args.append("--meet")
+
+    return _run_google_workspace_cli(args, tool_context)
 
 
 def query_lark_documents(query: str, tool_context: ToolContext) -> dict:
@@ -629,8 +1085,8 @@ def execute_lark_api(
     method: str,
     path: str,
     tool_context: ToolContext,
-    params: dict = None,
-    data: dict = None,
+    params_json: str = "",
+    data_json: str = "",
     file_path: str = "",
 ) -> dict:
     """
@@ -642,8 +1098,8 @@ def execute_lark_api(
         method: HTTP method (GET, POST, PUT, DELETE, PATCH).
         path: API endpoint path (e.g., '/open-apis/calendar/v4/calendars').
         tool_context: The tool execution context.
-        params: Optional dictionary of query parameters.
-        data: Optional dictionary for the JSON request body.
+        params_json: Optional JSON string of query parameters.
+        data_json: Optional JSON string for the request body.
         file_path: Optional. Local path to a file for multipart/form-data uploads.
 
     Returns:
@@ -655,10 +1111,12 @@ def execute_lark_api(
             return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "Authentication required."}
 
         args = [method.upper(), path]
-        if params:
-            args += ["--params", json.dumps(params)]
-        if data:
-            args += ["--data", json.dumps(data)]
+        params_arg = _coerce_json_cli_arg(params_json, "params_json")
+        data_arg = _coerce_json_cli_arg(data_json, "data_json")
+        if params_arg:
+            args += ["--params", params_arg]
+        if data_arg:
+            args += ["--data", data_arg]
         if file_path:
             args += ["--file", file_path]
 
