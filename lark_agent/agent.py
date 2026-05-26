@@ -29,6 +29,7 @@ from .tools import (
     list_google_calendar_events,
     create_google_calendar_event,
     discover_google_workspace_operations,
+    get_google_workspace_command_spec,
     get_google_workspace_operation_schema,
     execute_google_workspace_cli,
 )
@@ -68,7 +69,7 @@ system_instruction = (
     "- **ADVANCED LARK CAPABILITIES**: You can execute ANY Lark Open Platform API (Calendar, Bitable, Task, etc.) using 'execute_lark_api'. Use this when no specific tool exists for a user's request. Refer to official Lark API documentation for paths and parameters.\n"
     "- Deleting documents or files using 'delete_lark_document' with the document token and its type.\n"
     "- **GOOGLE WORKSPACE CAPABILITIES**: When the user asks to operate Google Workspace, use the dedicated Google Workspace tools backed by the packaged `gws` CLI. Available tools include searching Drive files, creating Google Docs with text, appending plain text to Google Docs, creating Google Sheets with rows, reading/appending Google Sheets ranges, listing Calendar events, and creating Calendar events.\n"
-    "- For long-tail Google Workspace operations, first use 'discover_google_workspace_operations' and 'get_google_workspace_operation_schema', then use 'execute_google_workspace_cli' with a JSON array of gws arguments. Prefer dedicated tools for common workflows.\n"
+    "- For long-tail Google Workspace operations, first use 'discover_google_workspace_operations', then 'get_google_workspace_command_spec', then 'execute_google_workspace_cli' with a JSON array of gws arguments. Only use 'get_google_workspace_operation_schema' when the registry has no matching command_id, and pass a real schema path such as drive.files.list, never --help.\n"
     "- For Google Workspace write operations, prefer concise, explicit parameters. Times for Calendar event creation must be RFC3339 timestamps with timezone offsets. Generic mutating gws commands should be dry-run first unless the user explicitly confirms execution.\n"
     "**ALL OUTPUT MUST BE IN MARKDOWN FORMAT.**\n\n"
     "BEHAVIORAL GUIDELINES:\n"
@@ -128,6 +129,7 @@ root_agent = Agent(
         list_google_calendar_events,
         create_google_calendar_event,
         discover_google_workspace_operations,
+        get_google_workspace_command_spec,
         get_google_workspace_operation_schema,
         execute_google_workspace_cli,
     ],

@@ -166,24 +166,37 @@ def test_append_google_sheet_rows_rejects_invalid_json_array():
 
 
 def test_discover_google_workspace_operations_uses_help(monkeypatch):
-    captured = {}
+    def fail_run_command(args, access_token, project_id="", timeout_seconds=120):
+        raise AssertionError("registry discovery should not execute gws help")
 
-    def fake_run_command(args, access_token, project_id="", timeout_seconds=120):
-        captured["args"] = args
-        captured["timeout_seconds"] = timeout_seconds
-        return {"status": "success", "content": "help"}
-
-    monkeypatch.setattr(lark_tools.gws_cli_client, "run_command", fake_run_command)
+    monkeypatch.setattr(lark_tools.gws_cli_client, "run_command", fail_run_command)
 
     result = lark_tools.discover_google_workspace_operations(
+        query="list drive files",
         service="drive",
         resource="files",
-        tool_context="google-token",
     )
 
     assert result["status"] == "success"
-    assert captured["args"] == ["drive", "files", "--help"]
-    assert captured["timeout_seconds"] == 60
+    assert result["source"] == "registry"
+    assert result["matches"][0]["command_id"] == "drive.files.list"
+    assert result["matches"][0]["argv_template"][:3] == ["drive", "files", "list"]
+
+
+def test_get_google_workspace_command_spec_returns_registry_entry(monkeypatch):
+    def fail_run_command(args, access_token, project_id="", timeout_seconds=120):
+        raise AssertionError("command spec lookup should not execute gws")
+
+    monkeypatch.setattr(lark_tools.gws_cli_client, "run_command", fail_run_command)
+
+    result = lark_tools.get_google_workspace_command_spec("docs.documents.create")
+
+    assert result["status"] == "success"
+    assert result["command_id"] == "docs.documents.create"
+    assert result["kind"] == "write"
+    assert result["requires_confirmation"] is True
+    assert result["argv_template"] == ["docs", "documents", "create", "--json", "<json-body>"]
+    assert "schema_json" not in result
 
 
 def test_get_google_workspace_operation_schema_builds_schema_command(monkeypatch):
@@ -300,6 +313,7 @@ def test_execute_google_workspace_cli_runs_safe_read_command(monkeypatch):
     )
 
     assert result["status"] == "success"
+    assert result["command_id"] == "drive.files.list"
     assert captured["args"][:3] == ["drive", "files", "list"]
     assert captured["timeout_seconds"] == 300
 

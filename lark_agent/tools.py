@@ -12,6 +12,11 @@ from lark_agent.config import (
     LARK_AUTH_ID,
     LARK_CLIENT_ID,
 )
+from lark_agent.gws_registry import (
+    find_command_for_args,
+    get_command_spec,
+    search_commands,
+)
 from lark_agent.infrastructure import lark_api_repository
 from lark_agent.infrastructure.cli_client import cli_client, gws_cli_client
 
@@ -29,13 +34,21 @@ GWS_ALLOWED_SERVICES = {
     "admin",
     "calendar",
     "chat",
+    "classroom",
     "docs",
     "drive",
+    "events",
+    "forms",
     "gmail",
+    "keep",
+    "meet",
+    "modelarmor",
     "people",
+    "script",
     "sheets",
     "slides",
     "tasks",
+    "workflow",
 }
 GWS_SAFE_META_COMMANDS = {"schema", "--help", "help", "--version", "version"}
 GWS_MUTATING_METHODS = {
@@ -266,30 +279,71 @@ def _validate_gws_args(args: list, allow_mutating: bool) -> None:
 
 
 def discover_google_workspace_operations(
+    query: str = "",
     service: str = "",
+    intent: str = "",
     resource: str = "",
     tool_context: ToolContext = None,
 ) -> dict:
     """
-    Discover Google Workspace CLI operations via gws help output.
+    Discover Google Workspace CLI operations from the local command registry.
 
     Args:
+        query: Natural-language capability query, e.g. "list drive files".
         service: Optional gws service name, e.g. drive, sheets, gmail.
+        intent: Optional intent filter such as read, write, create, or send.
         resource: Optional resource path under the service, separated by spaces, e.g. "files".
-        tool_context: Tool execution context containing the Google Workspace OAuth token.
+        tool_context: Accepted for ADK compatibility; registry lookup does not require OAuth.
     """
-    args = []
-    if service and service.strip():
-        service_name = service.strip()
-        if service_name not in GWS_ALLOWED_SERVICES:
-            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported gws service: {service_name}"}
-        args.append(service_name)
+    service_name = service.strip().lower() if service else ""
+    if service_name and service_name not in GWS_ALLOWED_SERVICES:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported gws service: {service_name}"}
+
     try:
-        args.extend(_parse_gws_resource_path(resource))
+        resource_parts = _parse_gws_resource_path(resource)
     except ValueError as e:
         return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
-    args.append("--help")
-    return _run_google_workspace_cli(args, tool_context, timeout_seconds=60)
+
+    matches = search_commands(
+        query=query or "",
+        service=service_name,
+        intent=intent or "",
+        resource_parts=resource_parts,
+    )
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        "source": "registry",
+        "matches": matches,
+        MESSAGE_KEY: (
+            "Use get_google_workspace_command_spec(command_id) before executing. "
+            "If no registry match fits, use get_google_workspace_operation_schema(method_path) "
+            "with a real path such as drive.files.list."
+        ),
+    }
+
+
+def get_google_workspace_command_spec(command_id: str) -> dict:
+    """
+    Return a registry-backed gws command specification for one command_id.
+    """
+    spec = get_command_spec(command_id)
+    if not spec:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: (
+                "Google Workspace command_id was not found in the local registry. "
+                "Use discover_google_workspace_operations first, or fall back to "
+                "get_google_workspace_operation_schema for a real gws schema path."
+            ),
+        }
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        **spec,
+        MESSAGE_KEY: (
+            "Registry command spec returned. Build execute_google_workspace_cli args "
+            "from argv_template and examples; do not invent shell commands."
+        ),
+    }
 
 
 def get_google_workspace_operation_schema(method_path: str, tool_context: ToolContext) -> dict:
@@ -343,14 +397,22 @@ def execute_google_workspace_cli(
     """
     try:
         args = _parse_gws_args(args_json)
-        if dry_run and _is_gws_mutating_args(args) and "--dry-run" not in args:
+        command_spec = find_command_for_args(args)
+        registry_marks_mutating = bool(command_spec and command_spec.get("kind") != "read")
+        if dry_run and (registry_marks_mutating or _is_gws_mutating_args(args)) and "--dry-run" not in args:
             args.append("--dry-run")
         _validate_gws_args(args, allow_mutating=allow_mutating)
     except ValueError as e:
         return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
 
     timeout_seconds = _safe_limit(timeout_seconds, default=120, minimum=10, maximum=300)
-    return _run_google_workspace_cli(args, tool_context, timeout_seconds=timeout_seconds)
+    result = _run_google_workspace_cli(args, tool_context, timeout_seconds=timeout_seconds)
+    if command_spec:
+        result = dict(result)
+        result["command_id"] = command_spec["command_id"]
+        result["command_kind"] = command_spec["kind"]
+        result["requires_confirmation"] = command_spec["requires_confirmation"]
+    return result
 
 
 def search_google_drive_files(query: str, tool_context: ToolContext, page_size: int = 10) -> dict:

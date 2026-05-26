@@ -23,4 +23,4 @@ build-backend = "setuptools.build_meta"
 include = ["lark_agent*"]
 
 [tool.setuptools.package-data]
-lark_agent = ["bin/lark-cli", "bin/gws"]  # 临时注释，避免上传超时
+lark_agent = ["bin/lark-cli", "bin/gws", "gws_registry/commands.json"]  # 临时注释，避免上传超时
