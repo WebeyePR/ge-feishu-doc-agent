@@ -128,12 +128,19 @@ def _run_google_workspace_cli(args: list, tool_context: ToolContext, timeout_sec
                 f"Missing token in tool_context.state['{GOOGLE_WORKSPACE_AUTH_ID}']."
             ),
         }
-    return gws_cli_client.run_command(
-        args=args,
-        access_token=access_token,
-        project_id=GOOGLE_WORKSPACE_PROJECT_ID,
-        timeout_seconds=timeout_seconds,
-    )
+    try:
+        return gws_cli_client.run_command(
+            args=args,
+            access_token=access_token,
+            project_id=GOOGLE_WORKSPACE_PROJECT_ID,
+            timeout_seconds=timeout_seconds,
+        )
+    except Exception as e:
+        logger.exception("Google Workspace CLI execution failed unexpectedly.")
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: f"Google Workspace CLI execution failed: {e}",
+        }
 
 
 def _safe_limit(value: int, default: int, minimum: int, maximum: int) -> int:
@@ -297,7 +304,23 @@ def get_google_workspace_operation_schema(method_path: str, tool_context: ToolCo
     service = safe_method.split(".", 1)[0]
     if service not in GWS_ALLOWED_SERVICES:
         return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported gws service: {service}"}
-    return _run_google_workspace_cli(["schema", safe_method], tool_context, timeout_seconds=60)
+    result = _run_google_workspace_cli(["schema", safe_method], tool_context, timeout_seconds=60)
+    if result.get(STATUS_KEY) != STATUS_SUCCESS:
+        return result
+
+    schema_payload = result.get("data", result.get("content"))
+    if not isinstance(schema_payload, str):
+        schema_payload = json.dumps(schema_payload, ensure_ascii=False)
+
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        "method_path": safe_method,
+        "schema_json": schema_payload,
+        MESSAGE_KEY: (
+            "Schema fetched successfully. schema_json is a JSON string; parse it before "
+            "constructing a generic gws command."
+        ),
+    }
 
 
 def execute_google_workspace_cli(
@@ -381,6 +404,64 @@ def append_google_doc_text(document_id: str, text: str, tool_context: ToolContex
     )
 
 
+def create_google_doc_with_text(title: str, text: str, tool_context: ToolContext) -> dict:
+    """
+    Create a Google Docs document and append plain text content.
+    """
+    if not title or not title.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "title is required."}
+    if not text:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "text is required."}
+
+    create_result = _run_google_workspace_cli(
+        [
+            "docs",
+            "documents",
+            "create",
+            "--json",
+            json.dumps({"title": title.strip()}, ensure_ascii=False),
+        ],
+        tool_context,
+    )
+    if create_result.get(STATUS_KEY) != STATUS_SUCCESS:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            "step": "create_google_doc",
+            MESSAGE_KEY: "Failed to create Google Docs document.",
+            "details": create_result,
+        }
+
+    created = create_result.get("data") or {}
+    document_id = created.get("documentId") or created.get("id")
+    if not document_id:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            "step": "extract_google_doc_id",
+            MESSAGE_KEY: "Google Docs create response did not include documentId.",
+            "details": create_result,
+        }
+
+    write_result = append_google_doc_text(document_id=document_id, text=text, tool_context=tool_context)
+    if write_result.get(STATUS_KEY) != STATUS_SUCCESS:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            "step": "write_google_doc",
+            MESSAGE_KEY: "Google Docs document was created, but writing content failed.",
+            "document_id": document_id,
+            "document_url": f"https://docs.google.com/document/d/{document_id}/edit",
+            "details": write_result,
+        }
+
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        MESSAGE_KEY: "Google Docs document created and populated successfully.",
+        "document_id": document_id,
+        "document_url": f"https://docs.google.com/document/d/{document_id}/edit",
+        "create_result": create_result,
+        "write_result": write_result,
+    }
+
+
 def read_google_sheet_range(spreadsheet_id: str, range_name: str, tool_context: ToolContext) -> dict:
     """
     Read values from a Google Sheets range using gws sheets +read.
@@ -433,6 +514,81 @@ def append_google_sheet_rows(spreadsheet_id: str, values_json: str, tool_context
         ],
         tool_context,
     )
+
+
+def create_google_sheet_with_rows(title: str, values_json: str, tool_context: ToolContext) -> dict:
+    """
+    Create a Google Sheets spreadsheet and append rows.
+
+    values_json accepts one row like ["a", "b"] or multiple rows like
+    [["a", "b"], ["c", "d"]].
+    """
+    if not title or not title.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "title is required."}
+    try:
+        values = _parse_json_array_arg(values_json, "values_json")
+    except ValueError as e:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+    if not values:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "values_json must be a non-empty JSON array."}
+
+    create_result = _run_google_workspace_cli(
+        [
+            "sheets",
+            "spreadsheets",
+            "create",
+            "--json",
+            json.dumps({"properties": {"title": title.strip()}}, ensure_ascii=False),
+        ],
+        tool_context,
+    )
+    if create_result.get(STATUS_KEY) != STATUS_SUCCESS:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            "step": "create_google_sheet",
+            MESSAGE_KEY: "Failed to create Google Sheets spreadsheet.",
+            "details": create_result,
+        }
+
+    created = create_result.get("data") or {}
+    spreadsheet_id = created.get("spreadsheetId") or created.get("id")
+    if not spreadsheet_id:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            "step": "extract_google_sheet_id",
+            MESSAGE_KEY: "Google Sheets create response did not include spreadsheetId.",
+            "details": create_result,
+        }
+
+    append_result = append_google_sheet_rows(
+        spreadsheet_id=spreadsheet_id,
+        values_json=json.dumps(values, ensure_ascii=False),
+        tool_context=tool_context,
+    )
+    if append_result.get(STATUS_KEY) != STATUS_SUCCESS:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            "step": "append_google_sheet_rows",
+            MESSAGE_KEY: "Google Sheets spreadsheet was created, but appending rows failed.",
+            "spreadsheet_id": spreadsheet_id,
+            "spreadsheet_url": created.get(
+                "spreadsheetUrl",
+                f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit",
+            ),
+            "details": append_result,
+        }
+
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        MESSAGE_KEY: "Google Sheets spreadsheet created and populated successfully.",
+        "spreadsheet_id": spreadsheet_id,
+        "spreadsheet_url": created.get(
+            "spreadsheetUrl",
+            f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit",
+        ),
+        "create_result": create_result,
+        "append_result": append_result,
+    }
 
 
 def list_google_calendar_events(

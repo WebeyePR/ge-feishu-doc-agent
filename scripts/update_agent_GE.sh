@@ -19,7 +19,7 @@ AGENT_RESOURCE_NAME="$GE_AGENT_RESOURCE_NAME"
 NEW_REASONING_ENGINE="$VERTEX_REASONING_ENGINE_NAME"
 
 echo "正在更新 Gemini Enterprise Agent 到新的 Reasoning Engine..."
-echo "Target Agent: Lark Document Agent GB Dev"
+echo "Target Agent: WebEye Nexus Agent"
 echo "New Engine: $NEW_REASONING_ENGINE"
 
 

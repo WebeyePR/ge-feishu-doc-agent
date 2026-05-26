@@ -177,3 +177,47 @@ def test_wait_for_feishu_doc_update_task_returns_running_after_timeout(monkeypat
     assert result["completed"] is False
     assert result["poll_attempts"] == 2
     assert result["task_id"] == "task_456"
+
+
+def test_execute_lark_api_uses_json_string_args(monkeypatch):
+    captured = {}
+
+    def fake_run_command(service, command, args, access_token, app_id):
+        captured["service"] = service
+        captured["command"] = command
+        captured["args"] = args
+        captured["access_token"] = access_token
+        return {"status": "success", "data": {"ok": True}}
+
+    monkeypatch.setattr(lark_tools.cli_client, "run_command", fake_run_command)
+
+    result = lark_tools.execute_lark_api(
+        method="GET",
+        path="/open-apis/calendar/v4/calendars",
+        params_json='{"page_size":10}',
+        data_json='{"name":"team"}',
+        tool_context="fake-token",
+    )
+
+    assert result["status"] == "success"
+    assert captured["service"] == "api"
+    assert captured["args"] == [
+        "GET",
+        "/open-apis/calendar/v4/calendars",
+        "--params",
+        '{"page_size":10}',
+        "--data",
+        '{"name":"team"}',
+    ]
+
+
+def test_execute_lark_api_rejects_invalid_json_string():
+    result = lark_tools.execute_lark_api(
+        method="POST",
+        path="/open-apis/test",
+        params_json="{bad-json}",
+        tool_context="fake-token",
+    )
+
+    assert result["status"] == "error"
+    assert "params_json must be a valid JSON string" in result["message"]
