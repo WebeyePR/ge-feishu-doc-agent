@@ -280,6 +280,41 @@ def get_document_content(
         raise Exception(f"Lark Content API Error [Code {error_code}]: {error_msg}")
 
 
+def get_document_markdown(access_token: str, doc_token: str) -> str:
+    """
+    通过飞书新版 Docs AI 接口同步拉取高保真 Markdown 内容。
+
+    功能说明：
+    - 调用 /open-apis/docs_ai/v1/documents/{token}/fetch 接口。
+    - 支持拉取最新的 Docx 高质量高保真 Markdown。
+    - 同步返回数据，效率远高于标准的异步导出任务。
+
+    Args:
+        access_token: 用户的访问令牌。
+        doc_token: 云文档的唯一 Token 标识。
+
+    Returns:
+        str: 导出的 Markdown 文本。
+    """
+    logger.info(f"--- get_document_markdown ---: {doc_token}")
+    url = f"{LARK_DOMAIN}/open-apis/docs_ai/v1/documents/{doc_token}/fetch"
+    payload = {"format": "markdown"}
+
+    response = _session.post(url, headers=_get_header(access_token), json=payload)
+    response.raise_for_status()
+    data = response.json()
+
+    if data.get("code") == 0:
+        return data.get("data", {}).get("document", {}).get("content", "")
+    else:
+        error_msg = data.get("msg", "Unknown error")
+        error_code = data.get("code", "Unknown")
+        logger.error(
+            f"Lark API Fetch Markdown Error: {error_msg} (Code: {error_code}), Token: {doc_token}"
+        )
+        raise Exception(f"Lark Fetch Markdown API Error [Code {error_code}]: {error_msg}")
+
+
 def get_document_preview(
     access_token: str,
     doc_token: str,

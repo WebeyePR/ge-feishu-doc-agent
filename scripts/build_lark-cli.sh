@@ -7,7 +7,7 @@
 set -e
 
 # --- 配置区 ---
-CLI_VERSION="v1.0.32"
+CLI_VERSION="v1.0.40"
 CLI_REPO_URL="https://github.com/larksuite/cli.git"
 # --------------
 

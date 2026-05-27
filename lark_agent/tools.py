@@ -910,6 +910,51 @@ def get_lark_document_content(
         }
 
 
+def get_lark_document_markdown(
+    doc_token: str, tool_context: ToolContext
+) -> dict:
+    """
+    Retrieves the content of a specific Lark document (docx only) in high-quality Lark-flavored Markdown format.
+    This uses Feishu's V2 Docs AI fetch API to return extremely high-fidelity Markdown, including tables, lists, and callout blocks.
+
+    Args:
+        doc_token: The unique identifier of the document.
+        tool_context: The tool execution context.
+
+    Returns:
+        dict: A dictionary containing the document content if successful.
+              - On success: {'status': 'success', 'content': '...markdown content...'}
+              - On error: {'status': 'error', 'message': ...}
+    """
+    try:
+        # 获取用户授权的 Access Token (OAuth流程或UAT)
+        access_token = get_access_token(tool_context)
+
+        if not access_token:
+            return {
+                STATUS_KEY: STATUS_ERROR,
+                MESSAGE_KEY: "Access token is missing. Please ensure OAuth is configured.",
+            }
+
+        # 调用底层 docs_ai fetch API 拉取 Markdown
+        content = lark_api_repository.get_document_markdown(
+            access_token, doc_token
+        )
+
+        return {STATUS_KEY: STATUS_SUCCESS, "content": content}
+
+    except Exception as e:
+        import traceback
+
+        error_detail = traceback.format_exc()
+        logger.error(f"Failed to get document markdown: {error_detail}")
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: f"Failed to get document markdown for token {doc_token}: {str(e)}",
+            "debug_info": error_detail,
+        }
+
+
 def show_user_auth_info(tool_context: ToolContext) -> str:
     """
     Displays the current user authentication information using the standard ADK auth response format.
