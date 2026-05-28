@@ -416,7 +416,7 @@ def delete_reasoning_engine(
     if not location:
         return False, "无效的 Reasoning Engine 资源名"
 
-    url = f"https://{location}-aiplatform.googleapis.com/v1/{resource_name}"
+    url = f"https://{location}-aiplatform.googleapis.com/v1/{resource_name}?force=true"
     response = session.delete(
         url,
         headers={

@@ -9,6 +9,9 @@ source "$SCRIPT_DIR/load_env.sh"
 
 AGENT_NAME="${1:-$GE_AGENT_RESOURCE_NAME}"
 
+# 彻底清洗变量，去除单双引号、\r 及首尾空格，防止 REST 请求路径污染
+AGENT_NAME=$(echo "$AGENT_NAME" | tr -d "'\"" | tr -d '\r' | xargs)
+
 # 默认值
 GE_APP_LOCATION="${GE_APP_LOCATION:-global}"
 if [ -z "$AGENT_NAME" ]; then

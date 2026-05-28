@@ -15,6 +15,9 @@ if [ -z "$RE_NAME" ]; then
     exit 1
 fi
 
+# 彻底清洗变量，去除单双引号、\r 及首尾空格，防止 query string (?force=true') 污染导致 boolean 参数失效
+RE_NAME=$(echo "$RE_NAME" | tr -d "'\"" | tr -d '\r' | xargs)
+
 echo "正在删除 Reasoning Engine: $RE_NAME"
 
 # 尝试提取 location
@@ -37,7 +40,7 @@ response=$(curl -s -X DELETE \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -H "X-Goog-User-Project: ${PROJECT_ID}" \
-    "https://${RE_LOCATION}-aiplatform.googleapis.com/v1/${RE_NAME}" \
+    "https://${RE_LOCATION}-aiplatform.googleapis.com/v1/${RE_NAME}?force=true" \
     -w "\nHTTP_STATUS:%{http_code}")
 
 http_status=$(echo "$response" | grep "HTTP_STATUS" | cut -d: -f2)
