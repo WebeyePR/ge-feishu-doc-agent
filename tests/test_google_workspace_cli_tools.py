@@ -419,3 +419,68 @@ def test_packaged_cli_log_redacts_sensitive_argument_values(tmp_path):
     assert "confidential body" not in formatted
     assert '{"q":"secret"}' not in formatted
     assert formatted.count("<redacted>") == 2
+
+
+def test_execute_google_workspace_cli_flat_runs_safe_command(monkeypatch):
+    captured = {}
+
+    def fake_run_command(args, access_token, project_id="", timeout_seconds=120):
+        captured["args"] = args
+        captured["timeout_seconds"] = timeout_seconds
+        return {"status": "success", "data": {"files": []}}
+
+    monkeypatch.setattr(lark_tools.gws_cli_client, "run_command", fake_run_command)
+
+    result = lark_tools.execute_google_workspace_cli_flat(
+        service="drive",
+        resource="files",
+        method="list",
+        params_json='{"pageSize": 10}',
+        tool_context="google-token",
+    )
+
+    assert result["status"] == "success"
+    assert captured["args"][:3] == ["drive", "files", "list"]
+    assert "--params" in captured["args"]
+    assert '{"pageSize": 10}' in captured["args"]
+
+
+def test_execute_google_workspace_cli_flat_cleans_json_input(monkeypatch):
+    captured = {}
+
+    def fake_run_command(args, access_token, project_id="", timeout_seconds=120):
+        captured["args"] = args
+        return {"status": "success", "data": {"ok": True}}
+
+    monkeypatch.setattr(lark_tools.gws_cli_client, "run_command", fake_run_command)
+
+    # 包含外层多余引号的 JSON 参数
+    result = lark_tools.execute_google_workspace_cli_flat(
+        service="sheets",
+        resource="spreadsheets",
+        method="create",
+        json_body='\'{"properties": {"title": "Demo"}}\'',
+        tool_context="google-token",
+        dry_run=True,
+    )
+
+    assert result["status"] == "success"
+    assert "--json" in captured["args"]
+    # 验证是否成功清洗了外层的单引号，变回合法的 JSON
+    assert '{"properties": {"title": "Demo"}}' in captured["args"]
+    assert "--dry-run" in captured["args"]
+
+
+def test_execute_google_workspace_cli_flat_blocks_mutating_command(monkeypatch):
+    result = lark_tools.execute_google_workspace_cli_flat(
+        service="gmail",
+        resource="users messages",
+        method="send",
+        json_body='{"raw": "xyz"}',
+        tool_context="google-token",
+        dry_run=False,
+        allow_mutating=False,
+    )
+
+    assert result["status"] == "error"
+    assert "appears to mutate data" in result["message"]

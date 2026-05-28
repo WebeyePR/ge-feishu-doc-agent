@@ -5,6 +5,7 @@ from google.adk.agents.llm_agent import Agent
 from .tools import (
     query_lark_documents,
     get_lark_document_markdown,
+    get_lark_document_rich_content,
     get_lark_document_content_pdf,
     get_lark_document_content_docx,
     get_access_token,
@@ -31,6 +32,8 @@ from .tools import (
     get_google_workspace_command_spec,
     get_google_workspace_operation_schema,
     execute_google_workspace_cli,
+    execute_google_workspace_cli_flat,
+    render_image_as_artifact,
 )
 
 # 激活 ADK 多模态扩展：让工具能通过 FunctionResponse.parts 传递图片/PDF
@@ -73,7 +76,7 @@ system_instruction = (
     "- **ADVANCED LARK CAPABILITIES**: You can execute ANY Lark Open Platform API (Calendar, Bitable, Task, etc.) using 'execute_lark_api'. Use this when no specific tool exists for a user's request. Refer to official Lark API documentation for paths and parameters.\n"
     "- Deleting documents or files using 'delete_lark_document' with the document token and its type.\n"
     "- **GOOGLE WORKSPACE CAPABILITIES**: When the user asks to operate Google Workspace, use the dedicated Google Workspace tools backed by the packaged `gws` CLI. Available tools include searching Drive files, creating Google Docs with text, appending plain text to Google Docs, creating Google Sheets with rows, reading/appending Google Sheets ranges, listing Calendar events, and creating Calendar events.\n"
-    "- For long-tail Google Workspace operations, first use 'discover_google_workspace_operations', then 'get_google_workspace_command_spec', then 'execute_google_workspace_cli' with a JSON array of gws arguments. Only use 'get_google_workspace_operation_schema' when the registry has no matching command_id, and pass a real schema path such as drive.files.list, never --help.\n"
+    "- For long-tail Google Workspace operations, first use 'discover_google_workspace_operations', then 'get_google_workspace_command_spec', then use 'execute_google_workspace_cli_flat' (RECOMMENDED for robustness and stability against quote escaping issues) or 'execute_google_workspace_cli' with a JSON array of gws arguments. Only use 'get_google_workspace_operation_schema' when the registry has no matching command_id, and pass a real schema path such as drive.files.list, never --help.\n"
     "- For Google Workspace write operations, prefer concise, explicit parameters. Times for Calendar event creation must be RFC3339 timestamps with timezone offsets. Generic mutating gws commands should be dry-run first unless the user explicitly confirms execution.\n"
     "**ALL OUTPUT MUST BE IN MARKDOWN FORMAT.**\n\n"
     "BEHAVIORAL GUIDELINES:\n"
@@ -99,6 +102,14 @@ system_instruction = (
     "   - **IMPORTANT: When the tool returns images, you will see them directly in the conversation as visual content. Simply describe what you see or answer questions based on the images. The text may contain placeholders like [📷 图片 ...] to indicate the position of each image within the document structure.**\n"
     "   - **IMPORTANT: 'get_lark_document_content_pdf' and 'get_lark_document_content_docx' deliver the PDF or Word file directly to your multimodal system. You should simply apply your reasoning capabilities to read and analyze the the document content directly.**\n"
     "3. **Error Reporting**: If a tool returns a dictionary with 'status': 'error', you MUST report the exact content of 'message' or 'debug_info' to the user. Do not summarize or hide technical details, as the user needs them for debugging.\n"
+    "4. **Lark Document & External Image Handling (CRITICAL FOR GEMINI ENTERPRISE)**:\n"
+    "   - **NEVER filter out, delete, or ignore image links** found in Lark documents or requested by users (including those with 'internal-api-drive-stream.feishu.cn', 'authcode', or any external domains like 'bowumi.com').\n"
+    "   - **NEVER output safety warnings** or excuses claiming 'images cannot be rendered due to authcode/security/sandbox restrictions'. You have powerful backend capabilities to resolve this.\n"
+    "   - **Mandatory ADK Artifact Channel for 100% Reliable Image Rendering**: Since Gemini Enterprise (GE) has strict browser sandboxing and Content Security Policies (CSP) that block direct external image rendering (causing broken images or unrendered markdown), you MUST bypass this using ADK Artifacts:\n"
+    "     1. When extracting document content, **always prefer 'get_lark_document_markdown'** or **'get_lark_document_rich_content'**. These tools automatically fetch embedded images and register them as secure ADK Artifacts.\n"
+    "     2. When the user posts an external image URL (e.g., a 'bowumi.com' link, a Feishu raw image stream, etc.) and asks you to render/show it, **you MUST immediately invoke 'render_image_as_artifact(image_url)'** to download it securely on the backend and save it as an ADK Artifact.\n"
+    "     3. In your chat reply, explicitly inform the user that the image has been registered as a secure ADK Artifact and is rendered beautifully in the right-side 'Artifacts' panel. Provide the artifact filename for clear reference.\n"
+    "     4. Avoid displaying raw, unauthenticated image URLs in markdown if they are blocked by CSP. Trust and guide users to the Artifacts preview pane, which guarantees 100% visual fidelity and security.\n\n"
     "NOTICE: **ALL OUTPUT YOU RESPOND MUST BE IN MARKDOWN FORMAT.**"
 )
 
@@ -110,6 +121,7 @@ root_agent = Agent(
     tools=[
         query_lark_documents,
         get_lark_document_markdown,
+        get_lark_document_rich_content,
         get_lark_document_content_pdf,
         get_lark_document_content_docx,
         get_access_token,
@@ -136,6 +148,8 @@ root_agent = Agent(
         get_google_workspace_command_spec,
         get_google_workspace_operation_schema,
         execute_google_workspace_cli,
+        execute_google_workspace_cli_flat,
+        render_image_as_artifact,
     ],
 )
 

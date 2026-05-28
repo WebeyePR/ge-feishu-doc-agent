@@ -51,7 +51,7 @@ def get_tenant_access_token():
         raise Exception(f"获取 Token 失败: {data.get('msg')}")
 
 
-def test_get_plain_text(token, doc_token):
+def run_test_get_plain_text(token, doc_token):
     logger.info(f"开始测试 get_document_content (纯文本), token: {doc_token}...")
     try:
         content = get_document_content(token, doc_token)
@@ -70,7 +70,7 @@ def test_get_plain_text(token, doc_token):
         logger.error(f"纯文本抓取失败: {e}")
 
 
-def test_get_rich_text_by_block(token, doc_token):
+def run_test_get_rich_text_by_block(token, doc_token):
     logger.info(
         f"开始测试 get_document_rich_text_by_block (图文), token: {doc_token}..."
     )
@@ -108,7 +108,7 @@ def test_get_rich_text_by_block(token, doc_token):
         logger.error(f"图文内容抓取失败: {e}")
 
 
-def test_export_pdf(token, doc_token):
+def run_test_export_pdf(token, doc_token):
     logger.info(f"开始测试 get_document_as_pdf, token: {doc_token}...")
     try:
         pdf_bytes = get_document_as_pdf(token, doc_token)
@@ -125,7 +125,7 @@ def test_export_pdf(token, doc_token):
         logger.error(f"导出 PDF 失败: {e}")
 
 
-def test_export_docx(token, doc_token):
+def run_test_export_docx(token, doc_token):
     logger.info(f"开始测试 get_document_as_docx, token: {doc_token}...")
     try:
         docx_bytes = get_document_as_docx(token, doc_token)
@@ -160,16 +160,16 @@ if __name__ == "__main__":
     try:
         # token = get_tenant_access_token()  # 权限不足
         # 1. 测试纯文字抓取
-        test_get_plain_text(token, doc_token)
+        run_test_get_plain_text(token, doc_token)
 
         # 2. 测试图文模式抓取 (Block API)
-        test_get_rich_text_by_block(token, doc_token)
+        run_test_get_rich_text_by_block(token, doc_token)
 
         # 3. 测试 PDF 导出
-        test_export_pdf(token, doc_token)
+        run_test_export_pdf(token, doc_token)
 
         # 4. 测试 Word 导出
-        test_export_docx(token, doc_token)
+        run_test_export_docx(token, doc_token)
 
     except Exception as e:
         logger.error(f"测试初始化失败: {e}")

@@ -21,6 +21,9 @@ export PYTHONPATH=$(pwd)
 echo "--- 加载配置文件 ---"
 source scripts/load_env.sh
 
+# 保存旧的 Reasoning Engine 资源名称以供后续清理
+PREVIOUS_REASONING_ENGINE="$VERTEX_REASONING_ENGINE_NAME"
+
 echo "--- 初始化项目 ---"
 bash scripts/init.sh
 
@@ -103,6 +106,16 @@ fi
 
 # 重新加载部署生成的变量 (包含刚刚生成的 GE_AGENT_RESOURCE_NAME)
 source scripts/load_env.sh
+
+# 清理旧的 Reasoning Engine 资源 (避免云端资源累积和持续计费)
+if [ -n "$PREVIOUS_REASONING_ENGINE" ] && [ "$PREVIOUS_REASONING_ENGINE" != "$VERTEX_REASONING_ENGINE_NAME" ]; then
+    echo "--- 正在清理历史 Reasoning Engine 资源 ---"
+    echo "检测到旧的 Reasoning Engine: $PREVIOUS_REASONING_ENGINE"
+    echo "正在安全删除旧实例以节省云端资源..."
+    
+    # 调用项目中已有的删除脚本，并允许忽略失败，确保部署主流程能顺利完成
+    bash scripts/delete_reasoning_engine.sh "$PREVIOUS_REASONING_ENGINE" || echo "⚠️ 警告: 删除旧 Reasoning Engine 失败，您后续可以手动运行: bash scripts/delete_reasoning_engine.sh $PREVIOUS_REASONING_ENGINE 进行清理。"
+fi
 
 echo "--- [4/4] 部署完成！ ---"
 echo "Reasoning Engine ID: $VERTEX_REASONING_ENGINE_NAME"

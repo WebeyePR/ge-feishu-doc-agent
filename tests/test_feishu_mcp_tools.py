@@ -220,4 +220,36 @@ def test_execute_lark_api_rejects_invalid_json_string():
     )
 
     assert result["status"] == "error"
-    assert "params_json must be a valid JSON string" in result["message"]
+    assert "must be a valid, standard JSON string" in result["message"]
+
+
+def test_get_lark_document_markdown_success(monkeypatch):
+    import asyncio
+    from unittest.mock import MagicMock
+
+    # Mock get_access_token
+    monkeypatch.setattr(lark_tools, "get_access_token", lambda ctx: "fake-token")
+
+    # Mock lark_api_repository.get_document_markdown
+    monkeypatch.setattr(
+        lark_tools.lark_api_repository,
+        "get_document_markdown",
+        lambda access_token, doc_token: "# Document Title\n\nContent details...",
+    )
+
+    # Mock tool_context to provide save_artifact as async def
+    mock_tool_context = MagicMock()
+    async def mock_save_artifact(filename, artifact):
+        return "v1_test"
+    mock_tool_context.save_artifact = mock_save_artifact
+
+    # Call get_lark_document_markdown
+    result = asyncio.run(
+        lark_tools.get_lark_document_markdown(
+            doc_token="docx_token_123",
+            tool_context=mock_tool_context,
+        )
+    )
+
+    assert result["status"] == "success"
+    assert result["content"] == "# Document Title\n\nContent details..."

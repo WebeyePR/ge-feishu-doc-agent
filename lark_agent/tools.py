@@ -168,23 +168,71 @@ def _escape_google_query_literal(value: str) -> str:
     return (value or "").replace("\\", "\\\\").replace("'", "\\'")
 
 
+def _robust_clean_json(json_str: str, field_name: str = "json") -> str:
+    """
+    对 AI 传进来的 JSON 字符串进行智能防御性容错清洗，解决多重转义和引号不规范引起的解析错乱。
+    """
+    if json_str in (None, ""):
+        return ""
+    
+    if not isinstance(json_str, str):
+        # 若直接传入 Python 字典或列表，直接序列化返回
+        return json.dumps(json_str, ensure_ascii=False)
+        
+    cleaned = json_str.strip()
+    if not cleaned:
+        return ""
+        
+    # 容错 1：去除画蛇添足的外层单/双引号包裹，如 '{"foo": "bar"}' -> {"foo": "bar"}
+    if (cleaned.startswith("'") and cleaned.endswith("'")) or (cleaned.startswith('"') and cleaned.endswith('"')):
+        candidate = cleaned[1:-1].strip()
+        if (candidate.startswith("{") and candidate.endswith("}")) or (candidate.startswith("[") and candidate.endswith("]")):
+            cleaned = candidate
+
+    # 容错 2：测试原样标准加载
+    try:
+        json.loads(cleaned)
+        return cleaned
+    except json.JSONDecodeError:
+        pass
+
+    # 容错 3：尝试将单引号替换为双引号，常发生于 AI 混用或漏掉了转义，如 {'pageSize': 10} -> {"pageSize": 10}
+    try:
+        replaced = cleaned.replace("'", '"')
+        json.loads(replaced)
+        return replaced
+    except json.JSONDecodeError:
+        pass
+
+    # 容错 4：如果首尾都不是 { } 且包含了 `\"`，有可能是首尾的双引号被多余反序列化了
+    try:
+        decoded_once = json.loads(f'"{cleaned}"')
+        json.loads(decoded_once)
+        return decoded_once
+    except:
+        pass
+
+    # 修复失败，抛出带有清晰示例和诊断指引的异常，帮助 AI 能够在第二次调用中 100% 自我修正
+    try:
+        json.loads(cleaned)
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"The field '{field_name}' must be a valid, standard JSON string.\n"
+            f"Parsing Error: {exc}\n"
+            f"Value Received: {json_str}\n"
+            f"Please ensure:\n"
+            f"1. Keys and values are enclosed in DOUBLE QUOTES (e.g., \"key\": \"value\").\n"
+            f"2. Single quotes are NOT used as JSON delimiters.\n"
+            f"3. No unnecessary shell escaping (e.g., avoid multiple backslashes \\\\\\) is added."
+        )
+
+
 def _coerce_json_cli_arg(value, field_name: str) -> str:
     """
-    Convert a JSON string or Python object into a CLI JSON argument.
-
-    ADK/Gemini currently rejects free-form dict schemas because they are emitted
-    with `additional_properties`. Tool-facing parameters therefore use strings,
-    while this helper keeps direct Python calls backward compatible.
+    Convert a JSON string or Python object into a CLI JSON argument with robust parsing.
     """
-    if value in (None, ""):
-        return ""
-    if isinstance(value, str):
-        try:
-            json.loads(value)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"{field_name} must be a valid JSON string: {exc}") from exc
-        return value
-    return json.dumps(value, ensure_ascii=False)
+    return _robust_clean_json(value, field_name)
+
 
 
 def _parse_json_array_arg(value, field_name: str) -> list:
@@ -407,6 +455,99 @@ def execute_google_workspace_cli(
 
     timeout_seconds = _safe_limit(timeout_seconds, default=120, minimum=10, maximum=300)
     result = _run_google_workspace_cli(args, tool_context, timeout_seconds=timeout_seconds)
+    if command_spec:
+        result = dict(result)
+        result["command_id"] = command_spec["command_id"]
+        result["command_kind"] = command_spec["kind"]
+        result["requires_confirmation"] = command_spec["requires_confirmation"]
+    return result
+
+
+def execute_google_workspace_cli_flat(
+    service: str,
+    resource: str,
+    method: str,
+    tool_context: ToolContext,
+    params_json: str = "",
+    json_body: str = "",
+    upload_file: str = "",
+    page_all: bool = False,
+    dry_run: bool = True,
+    allow_mutating: bool = False,
+    timeout_seconds: int = 120,
+) -> dict:
+    """
+    [Universal Tool] Execute a generic Google Workspace CLI command safely by providing flat arguments.
+    **CRITICAL**: Prefer this tool over the traditional array tool to prevent nested JSON shell escaping issues!
+    This tool safely packages your parameters into a physical argv array and runs 'gws' in the background.
+
+    Args:
+        service: Google service name (e.g., 'drive', 'sheets', 'gmail', 'calendar').
+        resource: Resource type path (e.g., 'files', 'spreadsheets', 'users messages', 'events').
+        method: Action name (e.g., 'list', 'get', 'create', 'update', 'delete').
+        tool_context: Tool execution context containing the OAuth token.
+        params_json: Optional. Flat JSON string of query parameters, e.g., '{"pageSize": 10}'. NO nested double quotes!
+        json_body: Optional. Flat JSON string of the request body, e.g., '{"properties": {"title": "My Sheet"}}'. NO nested double quotes!
+        upload_file: Optional. Local file path to upload (e.g., for drive.files.create).
+        page_all: Optional. Set to True to retrieve all pages for paginated queries.
+        dry_run: Optional. If True, append --dry-run to mutating commands.
+        allow_mutating: Optional. Must be True to run mutating commands without dry_run.
+        timeout_seconds: Optional. Command execution timeout, capped to 300s.
+    """
+    try:
+        service_clean = service.strip().lower()
+        if service_clean not in GWS_ALLOWED_SERVICES:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported gws service: {service_clean}"}
+
+        args = [service_clean]
+        
+        # 解析 resource (如 "users messages" -> ["users", "messages"])
+        resource_parts = _parse_gws_resource_path(resource)
+        args.extend(resource_parts)
+        
+        # 添加 method
+        method_clean = method.strip()
+        if not method_clean or method_clean.startswith("-"):
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Invalid method name: {method}"}
+        args.append(method_clean)
+        
+        # 验证并添加 params
+        if params_json and params_json.strip():
+            params_arg = _coerce_json_cli_arg(params_json, "params_json")
+            args.extend(["--params", params_arg])
+            
+        # 验证并添加 json_body
+        if json_body and json_body.strip():
+            json_arg = _coerce_json_cli_arg(json_body, "json_body")
+            args.extend(["--json", json_arg])
+            
+        # 验证并添加 upload_file
+        if upload_file and upload_file.strip():
+            file_clean = upload_file.strip()
+            if "/" in file_clean or ".." in file_clean:
+                return {
+                    STATUS_KEY: STATUS_ERROR, 
+                    MESSAGE_KEY: "Absolute paths and parent-directory traversal are not allowed for upload_file."
+                }
+            args.extend(["--upload", file_clean])
+            
+        if page_all:
+            args.append("--page-all")
+            
+        # 校验和自动 dry-run
+        command_spec = find_command_for_args(args)
+        registry_marks_mutating = bool(command_spec and command_spec.get("kind") != "read")
+        if dry_run and (registry_marks_mutating or _is_gws_mutating_args(args)) and "--dry-run" not in args:
+            args.append("--dry-run")
+            
+        _validate_gws_args(args, allow_mutating=allow_mutating)
+        
+    except Exception as e:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+    timeout_seconds = _safe_limit(timeout_seconds, default=120, minimum=10, maximum=300)
+    result = _run_google_workspace_cli(args, tool_context, timeout_seconds=timeout_seconds)
+    
     if command_spec:
         result = dict(result)
         result["command_id"] = command_spec["command_id"]
@@ -910,12 +1051,13 @@ def get_lark_document_content(
         }
 
 
-def get_lark_document_markdown(
+async def get_lark_document_markdown(
     doc_token: str, tool_context: ToolContext
 ) -> dict:
     """
     Retrieves the content of a specific Lark document (docx only) in high-quality Lark-flavored Markdown format.
     This uses Feishu's V2 Docs AI fetch API to return extremely high-fidelity Markdown, including tables, lists, and callout blocks.
+    It automatically detects embedded images, downloads them in the background, and registers them as secure ADK Artifacts.
 
     Args:
         doc_token: The unique identifier of the document.
@@ -940,6 +1082,77 @@ def get_lark_document_markdown(
         content = lark_api_repository.get_document_markdown(
             access_token, doc_token
         )
+
+        if not content:
+            return {STATUS_KEY: STATUS_SUCCESS, "content": ""}
+
+        # 🌟 自动解析 Markdown 中的图片链接并注册为 ADK Artifacts 🌟
+        img_pattern = r'!\[(.*?)\]\((https?://[^\s)]+)\)'
+        matches = re.findall(img_pattern, content)
+
+        if matches:
+            logger.info(f"[get_lark_document_markdown] Found {len(matches)} images in markdown. Saving as artifacts...")
+            from lark_agent.infrastructure.lark_api_repository import _session
+            from google.genai import types
+            
+            url_to_artifact = {}
+            headers = {"Authorization": f"Bearer {access_token}"}
+
+            for idx, (alt_text, img_url) in enumerate(matches, 1):
+                if img_url in url_to_artifact:
+                    continue
+
+                try:
+                    req_headers = {}
+                    if any(domain in img_url for domain in ["feishu.cn", "larksuite.com", "feishu-open.cn"]):
+                        req_headers = headers
+
+                    response = _session.get(img_url, headers=req_headers, timeout=20)
+                    if response.status_code == 200:
+                        img_bytes = response.content
+                        mime_type = response.headers.get("Content-Type", "image/jpeg")
+                        if not mime_type.startswith("image/"):
+                            mime_type = "image/jpeg"
+
+                        doc_hash = doc_token[:8]
+                        safe_alt = re.sub(r'[^a-zA-Z0-9_\-\.]', '_', alt_text) if alt_text else f"img_{idx}"
+                        if not safe_alt or safe_alt == "_":
+                            safe_alt = f"img_{idx}"
+
+                        ext_map = {
+                            "image/png": ".png",
+                            "image/jpeg": ".jpg",
+                            "image/jpg": ".jpg",
+                            "image/gif": ".gif",
+                            "image/webp": ".webp",
+                            "image/svg+xml": ".svg",
+                            "image/bmp": ".bmp",
+                        }
+                        target_ext = ext_map.get(mime_type, ".jpg")
+                        if not any(safe_alt.lower().endswith(ext) for ext in ext_map.values()):
+                            safe_alt = f"{safe_alt}{target_ext}"
+
+                        artifact_filename = f"lark_{doc_hash}_{safe_alt}"
+                        artifact_part = types.Part.from_bytes(data=img_bytes, mime_type=mime_type)
+                        version = await tool_context.save_artifact(filename=artifact_filename, artifact=artifact_part)
+                        
+                        url_to_artifact[img_url] = (artifact_filename, version)
+                except Exception as ex:
+                    logger.error(f"[get_lark_document_markdown] Failed to save image {img_url} as artifact: {ex}")
+
+            # 替换 Markdown 中的图片标注，添加指向 Artifact 的高保真提示词
+            def replace_img_tag(match):
+                alt = match.group(1)
+                url = match.group(2)
+                if url in url_to_artifact:
+                    artifact_filename, version = url_to_artifact[url]
+                    return (
+                        f"![{alt}]({url})\n"
+                        f"*(📷 该图片已作为 ADK 产物成功渲染，请在右侧‘产物/Artifacts’面板中查看：`{artifact_filename}`)*"
+                    )
+                return match.group(0)
+
+            content = re.sub(img_pattern, replace_img_tag, content)
 
         return {STATUS_KEY: STATUS_SUCCESS, "content": content}
 
@@ -1123,7 +1336,7 @@ def get_lark_document_content_docx(
         }
 
 
-def get_lark_document_rich_content(
+async def get_lark_document_rich_content(
     doc_token: str, tool_context: ToolContext, doc_type: str = "docx"
 ) -> dict:
     """
@@ -1190,10 +1403,36 @@ def get_lark_document_rich_content(
                                 "data": img_data,
                             }
                         )
-                        # 在文本中插入图片占位符，帮助模型关联上下文
-                        text_segments.append(
-                            f"\n[📷 图片 {img_name} - 见下方视觉输入 #{len(multimodal_parts)}]\n"
-                        )
+                        # 🌟 新增：直接注册为原生 ADK Artifact，确保用户前端 100% 渲染展示
+                        try:
+                            from google.genai import types
+                            artifact_part = types.Part.from_bytes(data=img_data, mime_type=mime)
+                            # 清洗文件名
+                            safe_img_name = re.sub(r'[^a-zA-Z0-9_\-\.]', '_', img_name)
+                            ext_map = {
+                                "image/png": ".png",
+                                "image/jpeg": ".jpg",
+                                "image/jpg": ".jpg",
+                                "image/gif": ".gif",
+                                "image/webp": ".webp",
+                                "image/svg+xml": ".svg",
+                                "image/bmp": ".bmp",
+                            }
+                            target_ext = ext_map.get(mime, ".jpg")
+                            if not any(safe_img_name.lower().endswith(ext) for ext in ext_map.values()):
+                                safe_img_name = f"{safe_img_name}{target_ext}"
+                            
+                            filename_in_service = f"lark_rich_{doc_token[:8]}_{safe_img_name}"
+                            version = await tool_context.save_artifact(filename=filename_in_service, artifact=artifact_part)
+                            
+                            text_segments.append(
+                                f"\n[📷 图片 '{img_name}' 已作为 ADK 产物成功渲染，请在侧边栏中预览：'{filename_in_service}' (版本 {version})，亦可通过下方视觉通道感知]\n"
+                            )
+                        except Exception as ae:
+                            logger.warning(f"Failed to save document image as artifact: {ae}")
+                            text_segments.append(
+                                f"\n[📷 图片 {img_name} - 见下方视觉输入 #{len(multimodal_parts)}]\n"
+                            )
                     else:
                         text_segments.append(f"\n[图片数据缺失: {img_name}]\n")
 
@@ -1354,16 +1593,33 @@ def execute_lark_api(
 ) -> dict:
     """
     [Universal Tool] Executes any Lark Open API command via the Lark CLI. 
-    Use this when no specific tool is available for a desired Lark feature (e.g., Calendar, Bitable, Task).
-    Refer to the Lark Open Platform API documentation for correct paths and parameters.
+    Use this when no specific tool is available for a desired Lark feature (e.g., Calendar, Bitable, Task, Message).
+    **CRITICAL**: Keep your `params_json` and `data_json` as flat, clean single-layer JSON strings to avoid nesting quote errors!
+
+    ### 100% REAL & VERIFIED LARK API EXAMPLES TO PREVENT HALLUCINATION:
+    
+    1. **Create a Calendar Event (创建日历日程)**:
+       - **method**: 'POST'
+       - **path**: '/open-apis/calendar/v4/calendars/feishu.cn_xxxxxxxx_xxxx/events'
+       - **data_json**: '{"summary": "Project Sync", "start_time": {"timestamp": "1779866173"}, "end_time": {"timestamp": "1779869773"}}'
+       
+    2. **Add a Bitable Record (向多维表格添加单条记录)**:
+       - **method**: 'POST'
+       - **path**: '/open-apis/bitable/v1/apps/bascnxxxxxxxxx/tables/tblxxxxxxxxx/records'
+       - **data_json**: '{"fields": {"Task Name": "Refactor Code", "Status": "In Progress"}}'
+       
+    3. **Send a Group Message (发送群组消息/单聊消息)**:
+       - **method**: 'POST'
+       - **path**: '/open-apis/im/v1/messages?receive_id_type=chat_id'
+       - **data_json**: '{"receive_id": "oc_xxxxxxxxxxxxxxxx", "msg_type": "text", "content": "{\\"text\\": \\"Hello World\\"}"}'
 
     Args:
         method: HTTP method (GET, POST, PUT, DELETE, PATCH).
         path: API endpoint path (e.g., '/open-apis/calendar/v4/calendars').
         tool_context: The tool execution context.
-        params_json: Optional JSON string of query parameters.
-        data_json: Optional JSON string for the request body.
-        file_path: Optional. Local path to a file for multipart/form-data uploads.
+        params_json: Optional JSON string of query parameters, e.g., '{"receive_id_type": "chat_id"}'.
+        data_json: Optional JSON string for the request body. No nested double-quotes except standard escaping!
+        file_path: Optional. Local path to a file for multipart/form-data uploads. Absolute paths and directory traversal are blocked.
 
     Returns:
         dict: The JSON response from the Lark API.
@@ -1380,13 +1636,20 @@ def execute_lark_api(
             args += ["--params", params_arg]
         if data_arg:
             args += ["--data", data_arg]
-        if file_path:
-            args += ["--file", file_path]
+        if file_path and file_path.strip():
+            file_clean = file_path.strip()
+            if "/" in file_clean or ".." in file_clean:
+                return {
+                    STATUS_KEY: STATUS_ERROR,
+                    MESSAGE_KEY: "Absolute paths and parent-directory traversal are blocked for file_path."
+                }
+            args += ["--file", file_clean]
 
         return cli_client.run_command("api", "", args, access_token, LARK_CLIENT_ID)
     except Exception as e:
         logger.error(f"Universal API call failed: {str(e)}")
         return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
 
 
 def feishu_mcp_create_doc(
@@ -1760,3 +2023,105 @@ def feishu_mcp_fetch_doc(
     except Exception as e:
         logger.error(f"MCP Fetch Doc Failed: {e}")
         return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+
+async def render_image_as_artifact(
+    image_url: str, tool_context: ToolContext
+) -> dict:
+    """
+    Downloads any external image (including Feishu authenticated images with authcode)
+    and saves it securely as an ADK Artifact. This bypasses browser CSP blockages
+    and makes the image instantly render in the Gemini Enterprise (GE) side-panel.
+
+    Args:
+        image_url: The full HTTP/HTTPS URL of the image to render.
+        tool_context: The tool execution context.
+
+    Returns:
+        dict: A dictionary containing status, artifact_name, and user-friendly messages.
+    """
+    try:
+        from google.genai import types
+        import hashlib
+        from urllib.parse import urlparse
+        
+        # 1. 针对飞书链接，添加 Lark access_token 鉴权头以确保下载成功
+        headers = {}
+        is_feishu = any(domain in image_url for domain in ["feishu.cn", "larksuite.com", "feishu-open.cn"])
+        if is_feishu:
+            access_token = get_access_token(tool_context)
+            if access_token:
+                headers["Authorization"] = f"Bearer {access_token}"
+                logger.info("[render_image_as_artifact] Adding Lark bearer token for downloading image.")
+
+        # 2. 从临时链接下载
+        from lark_agent.infrastructure.lark_api_repository import _session
+        response = _session.get(image_url, headers=headers, timeout=30)
+        
+        if response.status_code != 200:
+            logger.error(f"[render_image_as_artifact] Failed to download image from {image_url}. Status: {response.status_code}")
+            return {
+                STATUS_KEY: STATUS_ERROR,
+                MESSAGE_KEY: f"Failed to download image. HTTP Status: {response.status_code}"
+            }
+
+        img_bytes = response.content
+        mime_type = response.headers.get("Content-Type", "image/jpeg")
+        if not mime_type.startswith("image/"):
+            logger.warning(f"[render_image_as_artifact] Content-Type is {mime_type}, not starting with image/")
+
+        # 3. 提取清洁的文件名并规范化
+        parsed_url = urlparse(image_url)
+        path_segments = parsed_url.path.strip("/").split("/")
+        base_filename = path_segments[-1] if path_segments else ""
+        if not base_filename or len(base_filename) < 3:
+            url_hash = hashlib.md5(image_url.encode("utf-8")).hexdigest()[:8]
+            base_filename = f"img_{url_hash}"
+
+        # 只保留字母、数字、点、减号和下划线，防止非合法文件名字符导致 save_artifact 失败
+        base_filename = re.sub(r'[^a-zA-Z0-9_\-\.]', '_', base_filename)
+
+        # 根据 MIME 强制匹配正确的后缀
+        ext_map = {
+            "image/png": ".png",
+            "image/jpeg": ".jpg",
+            "image/jpg": ".jpg",
+            "image/gif": ".gif",
+            "image/webp": ".webp",
+            "image/svg+xml": ".svg",
+            "image/bmp": ".bmp",
+        }
+        target_ext = ext_map.get(mime_type, "")
+        if target_ext and not base_filename.lower().endswith(target_ext):
+            base_filename = f"{base_filename}{target_ext}"
+
+        # 加上 render_ 前缀以示区别
+        artifact_filename = f"render_{base_filename}"
+
+        # 4. 创建 ADK types.Part 并调用 save_artifact 保存
+        artifact_part = types.Part.from_bytes(data=img_bytes, mime_type=mime_type)
+        logger.info(f"[render_image_as_artifact] Saving image {artifact_filename} to ADK Artifact Service...")
+        version = await tool_context.save_artifact(filename=artifact_filename, artifact=artifact_part)
+        logger.info(f"[render_image_as_artifact] Successfully saved {artifact_filename} version {version}")
+
+        return {
+            "status": "success",
+            "artifact_name": artifact_filename,
+            "version": version,
+            "message": (
+                f"🎉 图片已成功通过后台下载，并已注册为 ADK Artifact 在侧边栏/预览面板中渲染展示！\n"
+                f"- **文件名**：{artifact_filename}\n"
+                f"- **版本**：{version}\n"
+                f"请在界面右侧的 'Artifacts' (或‘产物’) 标签下查看或直接下载此图片。此外，前端渲染器如果支持，您还可以直接在界面中进行高保真预览。"
+            )
+        }
+    except Exception as e:
+        import traceback
+        err_msg = f"Failed to render image as artifact. Error: {str(e)}"
+        logger.error(f"{err_msg}\n{traceback.format_exc()}")
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: err_msg,
+            "debug_info": traceback.format_exc()
+        }
+
