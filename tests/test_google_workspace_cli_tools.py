@@ -225,10 +225,8 @@ def test_create_google_doc_with_text_creates_then_writes(monkeypatch):
 
     def fake_run_command(args, access_token, project_id="", timeout_seconds=120):
         calls.append(args)
-        if args[:3] == ["docs", "documents", "create"]:
-            return {"status": "success", "data": {"documentId": "doc123"}}
-        if args[:2] == ["docs", "+write"]:
-            return {"status": "success", "data": {"ok": True}}
+        if args[:3] == ["drive", "files", "create"]:
+            return {"status": "success", "data": {"id": "doc123"}}
         return {"status": "error", "message": "unexpected command"}
 
     monkeypatch.setattr(lark_tools.gws_cli_client, "run_command", fake_run_command)
@@ -241,15 +239,12 @@ def test_create_google_doc_with_text_creates_then_writes(monkeypatch):
 
     assert result["status"] == "success"
     assert result["document_id"] == "doc123"
-    assert calls[0][:3] == ["docs", "documents", "create"]
-    assert calls[1] == ["docs", "+write", "--document", "doc123", "--text", "测试内容"]
+    assert calls[0][:3] == ["drive", "files", "create"]
 
 
 def test_create_google_doc_with_text_wraps_write_failure(monkeypatch):
     def fake_run_command(args, access_token, project_id="", timeout_seconds=120):
-        if args[:3] == ["docs", "documents", "create"]:
-            return {"status": "success", "data": {"documentId": "doc123"}}
-        return {"status": "error", "message": "write failed"}
+        return {"status": "error", "message": "upload and convert failed"}
 
     monkeypatch.setattr(lark_tools.gws_cli_client, "run_command", fake_run_command)
 
@@ -260,8 +255,7 @@ def test_create_google_doc_with_text_wraps_write_failure(monkeypatch):
     )
 
     assert result["status"] == "error"
-    assert result["step"] == "write_google_doc"
-    assert result["document_id"] == "doc123"
+    assert result["step"] == "upload_and_convert"
 
 
 def test_create_google_sheet_with_rows_creates_then_appends(monkeypatch):

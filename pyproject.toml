@@ -13,6 +13,7 @@ dependencies = [
     "langchain_google_vertexai>=3.2.2",
     "langgraph>=1.0.7",
     "google-genai>=1.56.0",
+    "markdown>=3.5",
 ]
 
 [build-system]
@@ -24,3 +25,7 @@ include = ["lark_agent*"]
 
 [tool.setuptools.package-data]
 lark_agent = ["bin/lark-cli", "bin/gws", "gws_registry/commands.json"]  # 临时注释，避免上传超时
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

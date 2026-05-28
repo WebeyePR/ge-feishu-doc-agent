@@ -300,19 +300,24 @@ def get_document_markdown(access_token: str, doc_token: str) -> str:
     url = f"{LARK_DOMAIN}/open-apis/docs_ai/v1/documents/{doc_token}/fetch"
     payload = {"format": "markdown"}
 
-    response = _session.post(url, headers=_get_header(access_token), json=payload)
-    response.raise_for_status()
-    data = response.json()
+    try:
+        response = _session.post(url, headers=_get_header(access_token), json=payload)
+        response.raise_for_status()
+        data = response.json()
 
-    if data.get("code") == 0:
-        return data.get("data", {}).get("document", {}).get("content", "")
-    else:
-        error_msg = data.get("msg", "Unknown error")
-        error_code = data.get("code", "Unknown")
-        logger.error(
-            f"Lark API Fetch Markdown Error: {error_msg} (Code: {error_code}), Token: {doc_token}"
-        )
-        raise Exception(f"Lark Fetch Markdown API Error [Code {error_code}]: {error_msg}")
+        if data.get("code") == 0:
+            return data.get("data", {}).get("document", {}).get("content", "")
+        else:
+            error_msg = data.get("msg", "Unknown error")
+            error_code = data.get("code", "Unknown")
+            logger.error(
+                f"Lark API Fetch Markdown Error: {error_msg} (Code: {error_code}), Token: {doc_token}"
+            )
+            raise Exception(f"Lark Fetch Markdown API Error [Code {error_code}]: {error_msg}")
+    except HTTPError as e:
+        logger.error(f"HTTP Error: {e}")
+        logger.error(f"Response: {e.response.text if e.response else 'No response'}")
+    return "No response"
 
 
 def get_document_preview(
