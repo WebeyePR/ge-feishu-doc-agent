@@ -17,6 +17,11 @@ from lark_agent.gws_registry import (
     get_command_spec,
     search_commands,
 )
+from lark_agent.lark_registry import (
+    find_command_for_args as find_lark_command_for_args,
+    get_command_spec as get_lark_command_spec_impl,
+    search_commands as search_lark_commands,
+)
 from lark_agent.infrastructure import lark_api_repository
 from lark_agent.infrastructure.cli_client import cli_client, gws_cli_client
 
@@ -88,6 +93,67 @@ GWS_MUTATING_HELPERS = {
 }
 
 
+LARK_ALLOWED_SERVICES = {
+    "approval",
+    "apps",
+    "attendance",
+    "base",
+    "calendar",
+    "contact",
+    "doc",
+    "docs",
+    "drive",
+    "event",
+    "im",
+    "mail",
+    "markdown",
+    "minutes",
+    "okr",
+    "api",
+    "vc",
+    "whiteboard",
+    "wiki",
+}
+LARK_SAFE_META_COMMANDS = {"schema", "--help", "help", "--version", "version"}
+LARK_MUTATING_METHODS = {
+    "create",
+    "delete",
+    "update",
+    "patch",
+    "post",
+    "put",
+    "send",
+    "reply",
+    "add",
+    "remove",
+    "set",
+    "upload",
+    "publish",
+    "rsvp",
+    "batch_delete",
+    "batch_create",
+    "clear",
+    "cancel",
+    "close",
+    "open",
+    "agree",
+    "reject",
+    "transfer",
+}
+LARK_MUTATING_HELPERS = {
+    "+create",
+    "+update",
+    "+delete",
+    "+send",
+    "+reply",
+    "+rsvp",
+    "+html-publish",
+    "+access-scope-set",
+    "+event-subscribe",
+}
+
+
+
 def _normalize_markdown_for_new_doc(title: str, markdown: str) -> str:
     """
     Normalize generated markdown before create-doc.
@@ -132,16 +198,16 @@ def get_google_workspace_access_token(tool_context: ToolContext) -> str:
 
 
 def _run_google_workspace_cli(args: list, tool_context: ToolContext, timeout_seconds: int = 120) -> dict:
-    access_token = get_google_workspace_access_token(tool_context)
-    if not access_token:
-        return {
-            STATUS_KEY: STATUS_ERROR,
-            MESSAGE_KEY: (
-                "Google Workspace authentication required. "
-                f"Missing token in tool_context.state['{GOOGLE_WORKSPACE_AUTH_ID}']."
-            ),
-        }
     try:
+        access_token = get_google_workspace_access_token(tool_context)
+        if not access_token:
+            return {
+                STATUS_KEY: STATUS_ERROR,
+                MESSAGE_KEY: (
+                    "Google Workspace authentication required. "
+                    f"Missing token in tool_context.state['{GOOGLE_WORKSPACE_AUTH_ID}']."
+                ),
+            }
         return gws_cli_client.run_command(
             args=args,
             access_token=access_token,
@@ -1074,13 +1140,20 @@ def list_google_calendar_events(
     """
     List upcoming Google Calendar events using gws calendar +agenda.
     """
-    days = _safe_limit(days, default=7, minimum=1, maximum=31)
-    args = ["calendar", "+agenda", "--days", str(days), "--format", "json"]
-    if calendar and calendar.strip():
-        args += ["--calendar", calendar.strip()]
-    if timezone and timezone.strip():
-        args += ["--timezone", timezone.strip()]
-    return _run_google_workspace_cli(args, tool_context)
+    try:
+        days = _safe_limit(days, default=7, minimum=1, maximum=31)
+        args = ["calendar", "+agenda", "--days", str(days), "--format", "json"]
+        if calendar and isinstance(calendar, str) and calendar.strip():
+            args += ["--calendar", calendar.strip()]
+        if timezone and isinstance(timezone, str) and timezone.strip():
+            args += ["--timezone", timezone.strip()]
+        return _run_google_workspace_cli(args, tool_context)
+    except Exception as e:
+        logger.exception("list_google_calendar_events failed unexpectedly.")
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: f"Failed to list calendar events: {e}",
+        }
 
 
 def create_google_calendar_event(
@@ -1100,41 +1173,395 @@ def create_google_calendar_event(
     start and end must be RFC3339 timestamps, for example
     2026-06-17T09:00:00+08:00.
     """
-    if not summary or not summary.strip():
-        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "summary is required."}
-    if not start or not start.strip():
-        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "start is required."}
-    if not end or not end.strip():
-        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "end is required."}
-
-    args = [
-        "calendar",
-        "+insert",
-        "--calendar",
-        (calendar or "primary").strip(),
-        "--summary",
-        summary.strip(),
-        "--start",
-        start.strip(),
-        "--end",
-        end.strip(),
-    ]
-    if description and description.strip():
-        args += ["--description", description.strip()]
-    if location and location.strip():
-        args += ["--location", location.strip()]
     try:
-        attendees = _parse_json_array_arg(attendees_json, "attendees_json")
+        # 强类型与非空校验守护
+        if not summary or not isinstance(summary, str) or not summary.strip():
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "summary is required and must be a non-empty string."}
+        if not start or not isinstance(start, str) or not start.strip():
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "start is required and must be a non-empty string."}
+        if not end or not isinstance(end, str) or not end.strip():
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "end is required and must be a non-empty string."}
+
+        # 确保可选参数传入非空和非字符串时的安全过渡
+        cal_str = calendar if isinstance(calendar, str) else "primary"
+        desc_str = description if isinstance(description, str) else ""
+        loc_str = location if isinstance(location, str) else ""
+
+        args = [
+            "calendar",
+            "+insert",
+            "--calendar",
+            (cal_str or "primary").strip(),
+            "--summary",
+            summary.strip(),
+            "--start",
+            start.strip(),
+            "--end",
+            end.strip(),
+        ]
+        if desc_str and desc_str.strip():
+            args += ["--description", desc_str.strip()]
+        if loc_str and loc_str.strip():
+            args += ["--location", loc_str.strip()]
+        try:
+            attendees = _parse_json_array_arg(attendees_json, "attendees_json")
+        except ValueError as e:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+        if attendees:
+            for attendee in attendees:
+                if attendee:
+                    args += ["--attendee", str(attendee).strip()]
+        if add_meet:
+            args.append("--meet")
+
+        return _run_google_workspace_cli(args, tool_context)
+    except Exception as e:
+        logger.exception("create_google_calendar_event failed unexpectedly.")
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: f"Failed to create calendar event: {e}",
+        }
+
+
+def _run_lark_cli(args: list, tool_context: ToolContext, timeout_seconds: int = 120) -> dict:
+    """
+    运行 Feishu/Lark CLI 命令行工具。
+    使用 cli_client 隔离执行，并传递 Lark 的 access_token。
+    """
+    try:
+        access_token = get_access_token(tool_context)
+        if not access_token:
+            return {
+                STATUS_KEY: STATUS_ERROR,
+                MESSAGE_KEY: (
+                    "Feishu/Lark authentication required. "
+                    f"Missing token in tool_context.state['{LARK_AUTH_ID}']."
+                ),
+            }
+        return cli_client.run_command(
+            args=args,
+            access_token=access_token,
+            client_id=LARK_CLIENT_ID,
+            timeout_seconds=timeout_seconds,
+        )
+    except Exception as e:
+        logger.exception("Feishu/Lark CLI execution failed unexpectedly.")
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: f"Feishu/Lark CLI execution failed: {e}",
+        }
+
+
+def _parse_lark_args(args_json: str) -> list:
+    """
+    解析并验证 Lark CLI 传入的 args_json 数组。
+    """
+    args = _parse_json_array_arg(args_json, "args_json")
+    if not args:
+        raise ValueError("args_json must be a non-empty JSON array.")
+    if len(args) > 40:
+        raise ValueError("args_json must contain at most 40 arguments.")
+    normalized = []
+    for arg in args:
+        if not isinstance(arg, str):
+            raise ValueError("args_json must contain strings only.")
+        if "\x00" in arg or "\n" in arg or "\r" in arg:
+            raise ValueError("args_json arguments must not contain control characters.")
+        if len(arg) > 20000:
+            raise ValueError("args_json contains an argument that is too long.")
+        normalized.append(arg)
+    return normalized
+
+
+def _is_lark_mutating_args(args: list) -> bool:
+    """
+    检测 Feishu/Lark 命令行参数是否具有写操作 (Mutation) 属性。
+    """
+    normalized_args = [arg.lower() for arg in args]
+    if any(arg in LARK_MUTATING_HELPERS for arg in normalized_args):
+        return True
+    return any(arg.split(".")[-1] in LARK_MUTATING_METHODS for arg in normalized_args)
+
+
+def _parse_lark_resource_path(resource: str) -> list:
+    """
+    解析 Feishu/Lark 的资源路径段，如 "drive.file" -> ["drive", "file"]。
+    """
+    if not resource or not resource.strip():
+        return []
+
+    parts = resource.strip().replace(".", " ").split()
+    for part in parts:
+        if part.startswith("-") or "/" in part or ".." in part:
+            raise ValueError("resource contains an invalid path segment.")
+        if "\x00" in part or "\n" in part or "\r" in part:
+            raise ValueError("resource must not contain control characters.")
+    return parts
+
+
+def _validate_lark_args(args: list, allow_mutating: bool) -> None:
+    """
+    对 Lark CLI 传入的参数进行极其严格的安全性、合规性及服务权限校验。
+    """
+    first = args[0]
+    if first.startswith("-") and first not in LARK_SAFE_META_COMMANDS:
+        raise ValueError("First Lark argument must be a service name or a safe meta command.")
+    if first not in LARK_ALLOWED_SERVICES and first not in LARK_SAFE_META_COMMANDS:
+        raise ValueError(
+            "Unsupported Feishu/Lark service. Allowed services: "
+            + ", ".join(sorted(LARK_ALLOWED_SERVICES))
+            + "."
+        )
+
+    blocked_flags = {
+        "--output",
+        "--output-dir",
+        "--dir",
+        "--credentials",
+        "--credentials-file",
+    }
+    for arg in args:
+        if arg.startswith("/") or ".." in arg:
+            raise ValueError("Absolute paths and parent-directory traversal are not allowed.")
+        if arg in blocked_flags:
+            raise ValueError(f"Flag {arg} is not allowed in the generic Lark executor.")
+
+    mutating = _is_lark_mutating_args(args)
+    if mutating and not allow_mutating and "--dry-run" not in args:
+        raise ValueError(
+            "This Feishu/Lark command appears to mutate data. Re-run with dry_run=True for preview "
+            "or allow_mutating=True after explicit user confirmation."
+        )
+
+
+def discover_lark_operations(
+    query: str = "",
+    service: str = "",
+    intent: str = "",
+    resource: str = "",
+    tool_context: ToolContext = None,
+) -> dict:
+    """
+    [Discovery Tool] 从本地 Feishu/Lark CLI 注册表中模糊搜索或发现 Feishu/Lark CLI 操作技能（无网络延迟、无需凭证授权）。
+
+    Args:
+        query: 自然语言描述的飞书接口能力（例如 "list documents" 或 "create record"），采用分词模糊搜索匹配。
+        service: 飞书模块服务名称过滤器，例如 drive, im, base, doc, contact, approval 等。
+        intent: 意图过滤器（可选 'read' 只读，或 'write' 突变修改），过滤只读和写入类操作。
+        resource: 被操作的飞书资源路径标识符，支持空格或点分隔（例如 "document block" 或 "base.record"）。
+        tool_context: 仅作为 ADK 工具执行器的兼容占位参数。
+    """
+    service_name = service.strip().lower() if service else ""
+    if service_name and service_name not in LARK_ALLOWED_SERVICES:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported Feishu/Lark service: {service_name}"}
+
+    try:
+        resource_parts = _parse_lark_resource_path(resource)
     except ValueError as e:
         return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
-    if attendees:
-        for attendee in attendees:
-            if attendee:
-                args += ["--attendee", str(attendee).strip()]
-    if add_meet:
-        args.append("--meet")
 
-    return _run_google_workspace_cli(args, tool_context)
+    matches = search_lark_commands(
+        query=query or "",
+        service=service_name,
+        intent=intent or "",
+        resource_parts=resource_parts,
+    )
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        "source": "lark_registry",
+        "matches": matches,
+        MESSAGE_KEY: (
+            "Use get_lark_command_spec(command_id) before executing. "
+            "If no registry match fits, use get_lark_operation_schema(method_path) "
+            "with a real path such as doc.raw.get."
+        ),
+    }
+
+
+def get_lark_command_spec(command_id: str) -> dict:
+    """
+    [Spec Tool] 根据唯一的 command_id 从本地注册表中获取飞书命令的入参、范例及结构定义。
+
+    Args:
+        command_id: 来自 discover_lark_operations 匹配得出的飞书命令唯一 ID（例如 "feishu:drive:file:list"）。
+    """
+    spec = get_lark_command_spec_impl(command_id)
+    if not spec:
+        return {
+            STATUS_KEY: STATUS_ERROR,
+            MESSAGE_KEY: (
+                "Feishu/Lark command_id was not found in the local registry. "
+                "Use discover_lark_operations first, or fall back to "
+                "get_lark_operation_schema for a real Lark schema path."
+            ),
+        }
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        **spec,
+        MESSAGE_KEY: (
+            "Registry command spec returned. Build execute_lark_cli args "
+            "from argv_template and examples; do not invent shell commands."
+        ),
+    }
+
+
+def get_lark_operation_schema(method_path: str, tool_context: ToolContext) -> dict:
+    """
+    [Schema Introspection] 实时调用飞书 CLI 执行 'feishu schema [path]'，拉取飞书特定 API 底层标准的 JSON Schema 元数据。
+
+    Args:
+        method_path: 飞书 API 完整服务与接口名，例如 doc.raw.get 或 base.record.create。
+        tool_context: 工具执行上下文，提供安全受控的 OAuth Token 注入支持。
+    """
+    if not method_path or not method_path.strip():
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "method_path is required."}
+    safe_method = method_path.strip()
+    if safe_method.startswith("-") or "/" in safe_method or ".." in safe_method:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: "method_path is invalid."}
+    service = safe_method.split(".", 1)[0]
+    if service not in LARK_ALLOWED_SERVICES:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported Feishu/Lark service: {service}"}
+    
+    result = _run_lark_cli(["schema", safe_method], tool_context, timeout_seconds=60)
+    if result.get(STATUS_KEY) != STATUS_SUCCESS:
+        return result
+
+    schema_payload = result.get("data", result.get("content"))
+    if not isinstance(schema_payload, str):
+        schema_payload = json.dumps(schema_payload, ensure_ascii=False)
+
+    return {
+        STATUS_KEY: STATUS_SUCCESS,
+        "method_path": safe_method,
+        "schema_json": schema_payload,
+        MESSAGE_KEY: (
+            "Schema fetched successfully. schema_json is a JSON string; parse it before "
+            "constructing a generic Lark command."
+        ),
+    }
+
+
+def execute_lark_cli(
+    args_json: str,
+    tool_context: ToolContext,
+    dry_run: bool = True,
+    allow_mutating: bool = False,
+    timeout_seconds: int = 120,
+) -> dict:
+    """
+    [Registry-Backed Executor] 传入序列化的飞书参数数组，调用高度隔离且自带干跑保护机制的飞书通用命令行执行器。
+
+    Args:
+        args_json: 飞书命令行参数的 JSON 格式字符串数组，例如：["drive", "file", "list", "--params", "{\\"pageSize\\": 10}"]
+        tool_context: 工具执行上下文，包含飞书用户 OAuth 的 access_token。
+        dry_run: 默认安全使能（True）。如果判断为写突变操作且缺失 '--dry-run'，会自动补全。
+        allow_mutating: 默认不使能（False）。突变修改类操作不加 '--dry-run' 时，此项必须声明为 True。
+        timeout_seconds: 执行超时秒数，取值 10s ~ 300s，默认 120s。
+    """
+    try:
+        args = _parse_lark_args(args_json)
+        command_spec = find_lark_command_for_args(args)
+        registry_marks_mutating = bool(command_spec and command_spec.get("kind") != "read")
+        if dry_run and (registry_marks_mutating or _is_lark_mutating_args(args)) and "--dry-run" not in args:
+            args.append("--dry-run")
+        _validate_lark_args(args, allow_mutating=allow_mutating)
+    except ValueError as e:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+    timeout_seconds = _safe_limit(timeout_seconds, default=120, minimum=10, maximum=300)
+    result = _run_lark_cli(args, tool_context, timeout_seconds=timeout_seconds)
+    
+    if command_spec:
+        result = dict(result)
+        result["command_id"] = command_spec["command_id"]
+        result["command_kind"] = command_spec["kind"]
+        result["requires_confirmation"] = command_spec["requires_confirmation"]
+    return result
+
+
+def execute_lark_cli_flat(
+    service: str,
+    resource: str,
+    method: str,
+    tool_context: ToolContext,
+    params_json: str = "",
+    json_body: str = "",
+    upload_file: str = "",
+    page_all: bool = False,
+    dry_run: bool = True,
+    allow_mutating: bool = False,
+    timeout_seconds: int = 120,
+) -> dict:
+    """
+    [Universal Flat Executor] 【优先推荐此工具】使用高层扁平结构传递服务、资源和方法，完美杜绝因多重 Shell 嵌套及 JSON 转义导致的不稳定性和注入风险。
+
+    Args:
+        service: 飞书底层服务模块（例如 'doc', 'drive', 'im', 'base', 'calendar', 'contact' 等）。
+        resource: 被操作的飞书实体资源路径（例如 'document', 'file', 'message', 'record' 等）。
+        method: 调用的操作名（例如 'list', 'get', 'create', 'update', 'delete' 等）。
+        tool_context: 工具执行上下文，携带飞书 OAuth 的安全凭证。
+        params_json: 可选。扁平的 Query 过滤参数 JSON 字符串，例如 '{"pageSize": 15}'。
+        json_body: 可选。请求体的 JSON Payload 字符串，例如 '{"title": "企业安全白皮书"}'。
+        upload_file: 可选。本地拟上载文件的绝对/相对路径名（文件直传功能）。
+        page_all: 可选。若为 True，则拉取列表数据时会自动追加 '--page-all' 分页抓取所有行。
+        dry_run: 默认安全使能（True）。写命令如果缺少安全只读模拟预览标记，会自动追加。
+        allow_mutating: 默认拦截保护（False）。突变修改操作执行（即 dry_run=False）必须传入此项为 True，方能生效。
+        timeout_seconds: 执行超时秒数上限（取值区间：10s ~ 300s，默认 120s）。
+    """
+    try:
+        service_clean = service.strip().lower()
+        if service_clean not in LARK_ALLOWED_SERVICES:
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Unsupported Feishu/Lark service: {service_clean}"}
+
+        args = [service_clean]
+        
+        resource_parts = _parse_lark_resource_path(resource)
+        args.extend(resource_parts)
+        
+        method_clean = method.strip()
+        if not method_clean or method_clean.startswith("-"):
+            return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: f"Invalid method name: {method}"}
+        args.append(method_clean)
+        
+        if params_json and params_json.strip():
+            params_arg = _coerce_json_cli_arg(params_json, "params_json")
+            args.extend(["--params", params_arg])
+            
+        if json_body and json_body.strip():
+            json_arg = _coerce_json_cli_arg(json_body, "json_body")
+            args.extend(["--json", json_arg])
+            
+        if upload_file and upload_file.strip():
+            file_clean = upload_file.strip()
+            if "/" in file_clean or ".." in file_clean:
+                return {
+                    STATUS_KEY: STATUS_ERROR, 
+                    MESSAGE_KEY: "Absolute paths and parent-directory traversal are not allowed for upload_file."
+                }
+            args.extend(["--upload", file_clean])
+            
+        if page_all:
+            args.append("--page-all")
+            
+        command_spec = find_lark_command_for_args(args)
+        registry_marks_mutating = bool(command_spec and command_spec.get("kind") != "read")
+        if dry_run and (registry_marks_mutating or _is_lark_mutating_args(args)) and "--dry-run" not in args:
+            args.append("--dry-run")
+            
+        _validate_lark_args(args, allow_mutating=allow_mutating)
+        
+    except Exception as e:
+        return {STATUS_KEY: STATUS_ERROR, MESSAGE_KEY: str(e)}
+
+    timeout_seconds = _safe_limit(timeout_seconds, default=120, minimum=10, maximum=300)
+    result = _run_lark_cli(args, tool_context, timeout_seconds=timeout_seconds)
+    
+    if command_spec:
+        result = dict(result)
+        result["command_id"] = command_spec["command_id"]
+        result["command_kind"] = command_spec["kind"]
+        result["requires_confirmation"] = command_spec["requires_confirmation"]
+    return result
 
 
 def query_lark_documents(query: str, tool_context: ToolContext) -> dict:

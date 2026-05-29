@@ -151,14 +151,70 @@ class CLIClient(PackagedCLIClient):
     def __init__(self, bin_path: Optional[str] = None):
         super().__init__("lark-cli", bin_path)
 
-    def run_command(self, service: str, command: str, args: list, access_token: str, app_id: str) -> Dict[str, Any]:
+    def run_command(
+        self,
+        *args_pos,
+        args: Optional[list] = None,
+        access_token: Optional[str] = None,
+        client_id: Optional[str] = None,
+        app_id: Optional[str] = None,
+        timeout_seconds: int = 120,
+        **kwargs
+    ) -> Dict[str, Any]:
         """
-        Runs a lark-cli command and returns the parsed JSON output.
+        运行 Feishu/Lark CLI 命令行工具。
+        支持两种参数签名风格以确保 100% 的向后兼容性：
+
+        风格 1（加固版统一参数签名）：
+            run_command(args=["docs", "+fetch", ...], access_token="...", client_id="...", timeout_seconds=120)
+
+        风格 2（历史陈旧 positional 签名）：
+            run_command(service, command, args, access_token, app_id)
         """
-        # 设置 CLI 识别的环境变量
-        if not app_id:
-            return {"status": "error", "message": "Missing LARK_CLIENT_ID configuration."}
-        if not access_token:
+        final_args: List[str] = []
+        final_token: Optional[str] = access_token
+        final_app_id: Optional[str] = client_id or app_id
+
+        # 1. 尝试匹配风格 2: 第一个参数是字符串，且位置参数个数 >= 3
+        if len(args_pos) >= 3 and isinstance(args_pos[0], str):
+            service = args_pos[0]
+            command = args_pos[1]
+            pos_args = args_pos[2]  # 应为参数 list
+            
+            if service:
+                final_args.append(service)
+            if command:
+                final_args.append(command)
+            if isinstance(pos_args, list):
+                final_args.extend(pos_args)
+
+            if len(args_pos) >= 4:
+                final_token = args_pos[3]
+            if len(args_pos) >= 5:
+                final_app_id = args_pos[4]
+        else:
+            # 2. 匹配风格 1 或其变体
+            # 若第一个位置参数是列表，认为是 args 数组：run_command(args, access_token, client_id, timeout_seconds)
+            if len(args_pos) >= 1 and isinstance(args_pos[0], list):
+                final_args = list(args_pos[0])
+                if len(args_pos) >= 2:
+                    final_token = args_pos[1]
+                if len(args_pos) >= 3:
+                    final_app_id = args_pos[2]
+                if len(args_pos) >= 4:
+                    timeout_seconds = args_pos[3]
+            else:
+                # 纯 keyword arguments 传入
+                if args is not None:
+                    final_args = list(args)
+
+        # 兜底：从 keyword 参数及 kwargs 提取未设定的值
+        final_token = final_token or kwargs.get("access_token")
+        final_app_id = final_app_id or kwargs.get("client_id") or kwargs.get("app_id")
+
+        if not final_app_id:
+            return {"status": "error", "message": "Missing LARK_CLIENT_ID / app_id configuration."}
+        if not final_token:
             return {"status": "error", "message": "Missing User Access Token."}
 
         # 创建临时的 HOME 目录以实现请求间的完全隔离
@@ -166,27 +222,19 @@ class CLIClient(PackagedCLIClient):
         
         env = os.environ.copy()
         env["HOME"] = tmp_home
-        env["LARKSUITE_CLI_APP_ID"] = str(app_id)
-        env["LARKSUITE_CLI_USER_ACCESS_TOKEN"] = str(access_token)
+        env["LARKSUITE_CLI_APP_ID"] = str(final_app_id)
+        env["LARKSUITE_CLI_USER_ACCESS_TOKEN"] = str(final_token)
         # 禁用更新检查和技能同步通知，确保输出纯净
         env["LARKSUITE_CLI_NO_UPDATE_NOTIFIER"] = "1"
         env["LARKSUITE_CLI_NO_SKILLS_NOTIFIER"] = "1"
 
-        # 构建命令参数
-        full_args = [self.bin_path]
-        if service:
-            full_args.append(service)
-        if command:
-            full_args.append(command)
-        full_args.extend(args)
-
         try:
-            return self._run(full_args[1:], env, tmp_home, timeout_seconds=120)
+            return self._run(final_args, env, tmp_home, timeout_seconds=timeout_seconds)
         finally:
             # 执行完毕后清理临时目录
             try:
                 shutil.rmtree(tmp_home, ignore_errors=True)
-            except:
+            except Exception:
                 pass
 
 

@@ -478,3 +478,51 @@ def test_execute_google_workspace_cli_flat_blocks_mutating_command(monkeypatch):
 
     assert result["status"] == "error"
     assert "appears to mutate data" in result["message"]
+
+
+def test_list_google_calendar_events_anticrash():
+    # 测试 tool_context = None 时，能够平稳返回 error 字典而不崩溃
+    result = lark_tools.list_google_calendar_events(
+        tool_context=None,
+        days=7,
+        calendar=None,  # 传入非 string，测试其对 strip() 的类型守卫
+        timezone=123,   # 传入非 string，测试其对 strip() 的类型守卫
+    )
+    assert result["status"] == "error"
+    assert "Google Workspace CLI execution failed" in result["message"] or "authentication" in result["message"]
+
+
+def test_create_google_calendar_event_anticrash():
+    # 1. 测试 summary, start, end 缺失或为 None 等各种非法输入时的类型守卫与防崩拦截
+    result = lark_tools.create_google_calendar_event(
+        summary=None,
+        start="2026-06-17T09:00:00+08:00",
+        end="2026-06-17T10:00:00+08:00",
+        tool_context="google-token"
+    )
+    assert result["status"] == "error"
+    assert "summary is required" in result["message"]
+
+    result2 = lark_tools.create_google_calendar_event(
+        summary="会议",
+        start=123,  # 非 str
+        end="2026-06-17T10:00:00+08:00",
+        tool_context="google-token"
+    )
+    assert result2["status"] == "error"
+    assert "start is required" in result2["message"]
+
+    # 2. 测试 tool_context 为 None 时，即使参数正确也绝对不崩溃
+    result3 = lark_tools.create_google_calendar_event(
+        summary="会议",
+        start="2026-06-17T09:00:00+08:00",
+        end="2026-06-17T10:00:00+08:00",
+        tool_context=None,
+        calendar={"invalid": "type"},  # 非 str
+        description=["invalid", "desc"],  # 非 str
+        location=None,  # None
+    )
+    assert result3["status"] == "error"
+    assert "Google Workspace CLI execution failed" in result3["message"] or "authentication" in result3["message"]
+
+

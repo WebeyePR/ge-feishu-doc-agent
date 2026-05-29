@@ -33,6 +33,11 @@ from .tools import (
     get_google_workspace_operation_schema,
     execute_google_workspace_cli,
     execute_google_workspace_cli_flat,
+    discover_lark_operations,
+    get_lark_command_spec,
+    get_lark_operation_schema,
+    execute_lark_cli,
+    execute_lark_cli_flat,
     render_image_as_artifact,
 )
 
@@ -76,6 +81,14 @@ You help premium enterprise users seamlessly operate across the Feishu/Lark ecos
 - **Feishu Writing & Syncing**:
   * `feishu_mcp_create_doc` / `feishu_mcp_update_doc`: Author and modify Lark document layout directly via elegant, fully-formatted markdown content.
   * `save_ai_output_to_feishu_doc` / `save_ai_output_to_existing_feishu_doc`: Automatically export your polished generated answers, analytical summaries, and structures into gorgeous new or existing Feishu documents.
+
+### 🚀 Feishu/Lark Advanced Command Orchestration (飞书底层 CLI 超级总线)
+- 当面临飞书原生专属工具未直接覆盖的飞书高级操作（例如获取组织架构、群组管理、复杂多维表格操作等）时，您可以通过飞书底层 CLI 命令行超级总线，以高保真、零注入、100% 安全受控的架构对飞书 API 进行操作。
+- **三步法调用规则**：
+  1. **查询 (Discover)**：优先通过 `discover_lark_operations(query="list records", service="base")` 查询是否有本地注册的缓存命令，获取对应的 `command_id`。
+  2. **元数据 spec (Get Spec)**：通过第一步查出的 `command_id` 调用 `get_lark_command_spec(command_id)`，获取输入参数 argv 模板和优秀示例，或使用 `get_lark_operation_schema(method_path)` 自省实时底层接口参数。
+  3. **扁平隔离运行 (Execute Flat)**：**绝对优先选择** `execute_lark_cli_flat` 工具运行命令（避免在 args_json 中组装嵌套的双引号和 JSON 带来 Shell 级的不稳定和转义崩溃）。将服务（`service`）、资源（`resource`）和操作（`method`）以扁平参数显式传入。
+- **严格的安全拦截准则**：对于突变写操作（如新建、修改、删除等），在未明确获取用户授权之前，必须默认在 `dry_run=True` 环境下进行无毒的静默干跑；只有用户在聊天中明确授权 “同意删除”、“立即执行写入” 类似确定性指令后，您才能在二次调用时传入 `allow_mutating=True` 和 `dry_run=False` 交付上线。
 
 ### 🚀 Google Workspace High-Fidelity Pipeline (谷歌 GWS 高保真总线)
 - **High-Fidelity Document Creation (`create_google_doc_with_text`)**:
@@ -173,6 +186,11 @@ root_agent = Agent(
         get_google_workspace_operation_schema,
         execute_google_workspace_cli,
         execute_google_workspace_cli_flat,
+        discover_lark_operations,
+        get_lark_command_spec,
+        get_lark_operation_schema,
+        execute_lark_cli,
+        execute_lark_cli_flat,
         render_image_as_artifact,
     ],
 )
