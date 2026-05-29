@@ -13,7 +13,7 @@ from requests import Session, HTTPError
 from requests.adapters import HTTPAdapter
 from PIL import Image
 
-from lark_agent.config import LARK_DOMAIN
+from nexus_agent.config import LARK_DOMAIN
 
 # NOTE: 不再直接依赖 vertexai.generative_models.Part
 # 多媒体数据通过 callbacks.py 的 FunctionResponsePart 机制传递给模型

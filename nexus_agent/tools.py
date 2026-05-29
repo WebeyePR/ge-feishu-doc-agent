@@ -6,24 +6,24 @@ import time
 
 from google.adk.tools import ToolContext
 
-from lark_agent.config import (
+from nexus_agent.config import (
     GOOGLE_WORKSPACE_AUTH_ID,
     GOOGLE_WORKSPACE_PROJECT_ID,
     LARK_AUTH_ID,
     LARK_CLIENT_ID,
 )
-from lark_agent.gws_registry import (
+from nexus_agent.gws_registry import (
     find_command_for_args,
     get_command_spec,
     search_commands,
 )
-from lark_agent.lark_registry import (
+from nexus_agent.lark_registry import (
     find_command_for_args as find_lark_command_for_args,
     get_command_spec as get_lark_command_spec_impl,
     search_commands as search_lark_commands,
 )
-from lark_agent.infrastructure import lark_api_repository
-from lark_agent.infrastructure.cli_client import cli_client, gws_cli_client
+from nexus_agent.infrastructure import lark_api_repository
+from nexus_agent.infrastructure.cli_client import cli_client, gws_cli_client
 
 logger = logging.getLogger(__name__)
 
@@ -1791,7 +1791,7 @@ async def get_lark_document_markdown(
 
             if matches:
                 logger.info(f"[get_lark_document_markdown] Found {len(matches)} images in markdown. Attempting to save as artifacts...")
-                from lark_agent.infrastructure.lark_api_repository import _session
+                from nexus_agent.infrastructure.lark_api_repository import _session
                 from google.genai import types
                 
                 url_to_artifact = {}
@@ -2758,7 +2758,7 @@ async def render_image_as_artifact(
                 logger.info("[render_image_as_artifact] Adding Lark bearer token for downloading image.")
 
         # 2. 从临时链接下载
-        from lark_agent.infrastructure.lark_api_repository import _session
+        from nexus_agent.infrastructure.lark_api_repository import _session
         response = _session.get(image_url, headers=headers, timeout=30)
         
         if response.status_code != 200:

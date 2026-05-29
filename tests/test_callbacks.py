@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import google.adk.flows.llm_flows.functions as fn_module
 from google.adk.events.event_actions import EventActions
 
-from lark_agent.callbacks import MULTIMODAL_PARTS_KEY, patch_adk_for_multimodal
+from nexus_agent.callbacks import MULTIMODAL_PARTS_KEY, patch_adk_for_multimodal
 
 
 def test_multimodal_patch_delegates_plain_tool_results(monkeypatch):

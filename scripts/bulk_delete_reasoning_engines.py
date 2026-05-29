@@ -116,8 +116,18 @@ def load_env_file(path: Path) -> None:
 
 
 def load_project_env() -> None:
-    load_env_file(ROOT_DIR / ".env")
-    load_env_file(ROOT_DIR / ".deploy_env")
+    base_env = os.getenv("BASE_ENV_FILE")
+    deploy_env = os.getenv("DEPLOY_ENV_FILE")
+    
+    if base_env:
+        load_env_file(Path(base_env))
+    else:
+        load_env_file(ROOT_DIR / ".env")
+        
+    if deploy_env:
+        load_env_file(Path(deploy_env))
+    else:
+        load_env_file(ROOT_DIR / ".deploy_env")
 
 
 def default_reasoning_engine_location() -> str:

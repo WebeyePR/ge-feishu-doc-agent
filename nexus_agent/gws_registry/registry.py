@@ -10,7 +10,7 @@ Google Workspace (GWS) CLI 模块化命令注册表查询逻辑
 """
 
 from typing import Any, Dict, List, Optional
-from lark_agent.lark_registry.registry import CLICommandRegistry
+from nexus_agent.lark_registry.registry import CLICommandRegistry
 
 # -----------------------------------------------------------------------------
 # GWS 专属注册表服务单例

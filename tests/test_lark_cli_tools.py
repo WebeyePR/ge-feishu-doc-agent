@@ -5,7 +5,7 @@ import pytest
 # 引入项目根路径
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from lark_agent import tools as lark_tools
+from nexus_agent import tools as lark_tools
 
 
 def test_discover_lark_operations_matches_registry(monkeypatch):
@@ -232,13 +232,13 @@ def test_cli_command_registry_multi_instance_extensibility():
     【多平台支持验证】测试 CLICommandRegistry 的多实例自治性。
     通过多实例隔离，未来可以零修改地轻松扩展出 钉钉(DingTalk)、企微(WeCom) 等新平台的注册表服务。
     """
-    from lark_agent.lark_registry.registry import CLICommandRegistry
+    from nexus_agent.lark_registry.registry import CLICommandRegistry
 
     # 1. 实例化 Lark 注册表服务
-    registry_lark = CLICommandRegistry("lark_agent.lark_registry")
+    registry_lark = CLICommandRegistry("nexus_agent.lark_registry")
     
     # 2. 实例化一个不存在的或空的平台注册表服务（用于模拟未来新平台的空状态/缺失状态）
-    registry_wecom = CLICommandRegistry("lark_agent.wecom_registry", config_name="wecom_commands.json")
+    registry_wecom = CLICommandRegistry("nexus_agent.wecom_registry", config_name="wecom_commands.json")
 
     # 3. 验证实例间的底层数据完全隔离
     lark_data = registry_lark._load_registry()

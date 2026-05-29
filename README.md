@@ -22,7 +22,7 @@
 
 本项目遵循 Clean Architecture 原则，主要包含以下模块：
 
-*   **lark_agent/**: Agent 的核心逻辑。
+*   **nexus_agent/**: Agent 的核心逻辑。
     *   `agent.py`: 定义 `LlmAgent` 的角色、Prompt 和工具集。
     *   `tools.py`: 定义供 Agent 调用的工具函数，负责参数校验、授权读取、结果归一化和业务级封装。
     *   `callbacks.py`: 处理多模态响应兼容性等运行时补丁。
@@ -217,7 +217,7 @@ bash deploy.sh
 本地运行会启动命令行交互。涉及飞书写操作或用户态读取时，工具会从运行上下文读取 Gemini Enterprise OAuth 注入的 access token；如需本地验证单个工具，建议直接编写测试或临时脚本传入 access token，不要修改 `tools.py` 中的授权读取逻辑。
 
 ```bash
-uv run python -m lark_agent.main
+uv run python -m nexus_agent.main
 ```
 
 **2. ADK Web 界面运行**:

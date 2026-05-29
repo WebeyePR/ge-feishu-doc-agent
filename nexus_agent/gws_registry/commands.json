@@ -1,0 +1,1130 @@
+{
+  "auth.login": {
+    "service": "auth",
+    "argv": [
+      "auth",
+      "login"
+    ],
+    "argv_template": [
+      "auth",
+      "login"
+    ],
+    "kind": "read",
+    "description": "gws CLI: Shared patterns for authentication, global flags, and output formatting.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "auth",
+          "login"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "auth",
+      "auth",
+      "login",
+      "gws CLI: Shared patterns for authentication, global flags, and output formatting."
+    ]
+  },
+  "calendar.+agenda": {
+    "service": "calendar",
+    "argv": [
+      "calendar",
+      "+agenda"
+    ],
+    "kind": "read",
+    "description": "List upcoming Google Calendar events.",
+    "input_notes": "Use --days for a relative window, --calendar for a specific calendar, and --format json for structured output.",
+    "examples": [
+      {
+        "args": [
+          "calendar",
+          "+agenda",
+          "--days",
+          "7",
+          "--format",
+          "json"
+        ]
+      }
+    ],
+    "keywords": [
+      "events",
+      "agenda",
+      "schedule",
+      "calendar",
+      "list"
+    ]
+  },
+  "calendar.+insert": {
+    "service": "calendar",
+    "argv": [
+      "calendar",
+      "+insert"
+    ],
+    "argv_template": [
+      "calendar",
+      "+insert",
+      "--calendar",
+      "<calendar-id>",
+      "--summary",
+      "<summary>",
+      "--start",
+      "<rfc3339-start>",
+      "--end",
+      "<rfc3339-end>"
+    ],
+    "kind": "write",
+    "description": "Create a Google Calendar event.",
+    "input_notes": "Use RFC3339 timestamps with timezone offsets for --start and --end. Add --meet only when a Meet link is requested.",
+    "examples": [
+      {
+        "args": [
+          "calendar",
+          "+insert",
+          "--calendar",
+          "primary",
+          "--summary",
+          "Review",
+          "--start",
+          "2026-06-17T09:00:00+08:00",
+          "--end",
+          "2026-06-17T09:30:00+08:00"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "event",
+      "meeting",
+      "create",
+      "insert",
+      "calendar"
+    ]
+  },
+  "chat.+send": {
+    "service": "chat",
+    "argv": [
+      "chat",
+      "+send"
+    ],
+    "argv_template": [
+      "chat",
+      "+send",
+      "--space",
+      "<NAME>",
+      "--text",
+      "<TEXT>"
+    ],
+    "kind": "write",
+    "description": "Google Chat: Send a message to a space.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "chat",
+          "+send",
+          "--space",
+          "<NAME>",
+          "--text",
+          "<TEXT>"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "chat",
+      "chat",
+      "+send",
+      "Google Chat: Send a message to a space."
+    ]
+  },
+  "docs.+write": {
+    "service": "docs",
+    "argv": [
+      "docs",
+      "+write"
+    ],
+    "argv_template": [
+      "docs",
+      "+write",
+      "--document",
+      "<document-id>",
+      "--text",
+      "<text>"
+    ],
+    "kind": "write",
+    "description": "Append plain text or markdown to a Google Docs document.",
+    "input_notes": "Use --document with the document ID and --text for plain text content.",
+    "examples": [
+      {
+        "args": [
+          "docs",
+          "+write",
+          "--document",
+          "<document-id>",
+          "--text",
+          "Hello"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "docs",
+      "document",
+      "write",
+      "append",
+      "text"
+    ]
+  },
+  "docs.documents.create": {
+    "service": "docs",
+    "argv": [
+      "docs",
+      "documents",
+      "create"
+    ],
+    "argv_template": [
+      "docs",
+      "documents",
+      "create",
+      "--json",
+      "<json-body>"
+    ],
+    "kind": "write",
+    "description": "Create a Google Docs document.",
+    "input_notes": "Use --json with {\"title\":\"...\"}. Prefer create_google_doc_with_text for create-and-populate workflows.",
+    "examples": [
+      {
+        "args": [
+          "docs",
+          "documents",
+          "create",
+          "--json",
+          "{\"title\":\"Test Doc\"}"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "docs",
+      "document",
+      "create",
+      "title"
+    ]
+  },
+  "drive.+upload": {
+    "service": "drive",
+    "argv": [
+      "drive",
+      "+upload"
+    ],
+    "argv_template": [
+      "drive",
+      "+upload",
+      "<file>"
+    ],
+    "kind": "write",
+    "description": "Google Drive: Upload a file with automatic metadata.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "drive",
+          "+upload",
+          "<file>"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "drive",
+      "drive",
+      "+upload",
+      "Google Drive: Upload a file with automatic metadata."
+    ]
+  },
+  "drive.files.copy": {
+    "service": "drive",
+    "argv": [
+      "drive",
+      "files",
+      "copy"
+    ],
+    "argv_template": [
+      "drive",
+      "files",
+      "copy",
+      "--file-id",
+      "<file-id>",
+      "--json",
+      "<json-body>"
+    ],
+    "kind": "write",
+    "description": "Copy a Google Drive file.",
+    "input_notes": "Use the file ID and optional metadata according to gws schema drive.files.copy.",
+    "examples": [
+      {
+        "args": [
+          "drive",
+          "files",
+          "copy",
+          "--file-id",
+          "<file-id>",
+          "--json",
+          "{\"name\":\"Copy\"}"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "drive",
+      "file",
+      "copy",
+      "duplicate"
+    ]
+  },
+  "drive.files.list": {
+    "service": "drive",
+    "argv": [
+      "drive",
+      "files",
+      "list"
+    ],
+    "argv_template": [
+      "drive",
+      "files",
+      "list",
+      "--params",
+      "<json-params>",
+      "--fields",
+      "<field-mask>"
+    ],
+    "kind": "read",
+    "description": "List or search Google Drive files.",
+    "input_notes": "Use --params with Drive query JSON and --fields to limit response size.",
+    "examples": [
+      {
+        "args": [
+          "drive",
+          "files",
+          "list",
+          "--params",
+          "{\"pageSize\":10,\"q\":\"trashed = false\"}",
+          "--fields",
+          "files(id,name,mimeType,webViewLink),nextPageToken"
+        ]
+      }
+    ],
+    "keywords": [
+      "drive",
+      "files",
+      "list",
+      "search",
+      "find"
+    ]
+  },
+  "events.+renew": {
+    "service": "events",
+    "argv": [
+      "events",
+      "+renew"
+    ],
+    "argv_template": [
+      "events",
+      "+renew"
+    ],
+    "kind": "read",
+    "description": "Google Workspace Events: Renew/reactivate Workspace Events subscriptions.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "events",
+          "+renew"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "events",
+      "events",
+      "+renew",
+      "Google Workspace Events: Renew/reactivate Workspace Events subscriptions."
+    ]
+  },
+  "events.+subscribe": {
+    "service": "events",
+    "argv": [
+      "events",
+      "+subscribe"
+    ],
+    "argv_template": [
+      "events",
+      "+subscribe"
+    ],
+    "kind": "write",
+    "description": "Google Workspace Events: Subscribe to Workspace events and stream them as NDJSON.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "events",
+          "+subscribe"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "events",
+      "events",
+      "+subscribe",
+      "Google Workspace Events: Subscribe to Workspace events and stream them as NDJSON."
+    ]
+  },
+  "gmail.+forward": {
+    "service": "gmail",
+    "argv": [
+      "gmail",
+      "+forward"
+    ],
+    "argv_template": [
+      "gmail",
+      "+forward",
+      "--id",
+      "<message-id>",
+      "--to",
+      "<email>"
+    ],
+    "kind": "write",
+    "description": "Forward a Gmail message.",
+    "input_notes": "Use a message ID, recipient, and optional body.",
+    "examples": [
+      {
+        "args": [
+          "gmail",
+          "+forward",
+          "--id",
+          "<message-id>",
+          "--to",
+          "user@example.com"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "gmail",
+      "email",
+      "forward",
+      "message"
+    ]
+  },
+  "gmail.+read": {
+    "service": "gmail",
+    "argv": [
+      "gmail",
+      "+read"
+    ],
+    "argv_template": [
+      "gmail",
+      "+read",
+      "--id",
+      "<ID>"
+    ],
+    "kind": "read",
+    "description": "Gmail: Read a message and extract its body or headers.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "gmail",
+          "+read",
+          "--id",
+          "<ID>"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "gmail",
+      "gmail",
+      "+read",
+      "Gmail: Read a message and extract its body or headers."
+    ]
+  },
+  "gmail.+reply": {
+    "service": "gmail",
+    "argv": [
+      "gmail",
+      "+reply"
+    ],
+    "argv_template": [
+      "gmail",
+      "+reply",
+      "--id",
+      "<message-id>",
+      "--body",
+      "<text>"
+    ],
+    "kind": "write",
+    "description": "Reply to a Gmail message.",
+    "input_notes": "Use a message ID and body text.",
+    "examples": [
+      {
+        "args": [
+          "gmail",
+          "+reply",
+          "--id",
+          "<message-id>",
+          "--body",
+          "Thanks"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "gmail",
+      "email",
+      "reply",
+      "message"
+    ]
+  },
+  "gmail.+reply-all": {
+    "service": "gmail",
+    "argv": [
+      "gmail",
+      "+reply-all"
+    ],
+    "argv_template": [
+      "gmail",
+      "+reply-all",
+      "--id",
+      "<message-id>",
+      "--body",
+      "<text>"
+    ],
+    "kind": "write",
+    "description": "Reply all to a Gmail message.",
+    "input_notes": "Use a message ID and body text.",
+    "examples": [
+      {
+        "args": [
+          "gmail",
+          "+reply-all",
+          "--id",
+          "<message-id>",
+          "--body",
+          "Thanks"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "gmail",
+      "email",
+      "reply all",
+      "message"
+    ]
+  },
+  "gmail.+send": {
+    "service": "gmail",
+    "argv": [
+      "gmail",
+      "+send"
+    ],
+    "argv_template": [
+      "gmail",
+      "+send",
+      "--to",
+      "<email>",
+      "--subject",
+      "<subject>",
+      "--body",
+      "<text>"
+    ],
+    "kind": "write",
+    "description": "Send an email through Gmail.",
+    "input_notes": "Use explicit --to, --subject, and --body values. Dry-run before real sending unless the user has explicitly confirmed.",
+    "examples": [
+      {
+        "args": [
+          "gmail",
+          "+send",
+          "--to",
+          "user@example.com",
+          "--subject",
+          "Hello",
+          "--body",
+          "Hello"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "gmail",
+      "email",
+      "send",
+      "compose"
+    ]
+  },
+  "gmail.+triage": {
+    "service": "gmail",
+    "argv": [
+      "gmail",
+      "+triage"
+    ],
+    "argv_template": [
+      "gmail",
+      "+triage"
+    ],
+    "kind": "read",
+    "description": "Gmail: Show unread inbox summary (sender, subject, date).",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "gmail",
+          "+triage"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "gmail",
+      "gmail",
+      "+triage",
+      "Gmail: Show unread inbox summary (sender, subject, date)."
+    ]
+  },
+  "gmail.+watch": {
+    "service": "gmail",
+    "argv": [
+      "gmail",
+      "+watch"
+    ],
+    "argv_template": [
+      "gmail",
+      "+watch"
+    ],
+    "kind": "write",
+    "description": "Gmail: Watch for new emails and stream them as NDJSON.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "gmail",
+          "+watch"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "gmail",
+      "gmail",
+      "+watch",
+      "Gmail: Watch for new emails and stream them as NDJSON."
+    ]
+  },
+  "modelarmor.+create-template": {
+    "service": "modelarmor",
+    "argv": [
+      "modelarmor",
+      "+create-template"
+    ],
+    "argv_template": [
+      "modelarmor",
+      "+create-template",
+      "--project",
+      "<PROJECT>",
+      "--location",
+      "<LOCATION>",
+      "--template-id",
+      "<ID>"
+    ],
+    "kind": "write",
+    "description": "Google Model Armor: Create a new Model Armor template.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "modelarmor",
+          "+create-template",
+          "--project",
+          "<PROJECT>",
+          "--location",
+          "<LOCATION>",
+          "--template-id",
+          "<ID>"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "modelarmor",
+      "modelarmor",
+      "+create-template",
+      "Google Model Armor: Create a new Model Armor template."
+    ]
+  },
+  "modelarmor.+sanitize-prompt": {
+    "service": "modelarmor",
+    "argv": [
+      "modelarmor",
+      "+sanitize-prompt"
+    ],
+    "argv_template": [
+      "modelarmor",
+      "+sanitize-prompt",
+      "--template",
+      "<NAME>"
+    ],
+    "kind": "read",
+    "description": "Google Model Armor: Sanitize a user prompt through a Model Armor template.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "modelarmor",
+          "+sanitize-prompt",
+          "--template",
+          "<NAME>"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "modelarmor",
+      "modelarmor",
+      "+sanitize-prompt",
+      "Google Model Armor: Sanitize a user prompt through a Model Armor template."
+    ]
+  },
+  "modelarmor.+sanitize-response": {
+    "service": "modelarmor",
+    "argv": [
+      "modelarmor",
+      "+sanitize-response"
+    ],
+    "argv_template": [
+      "modelarmor",
+      "+sanitize-response",
+      "--template",
+      "<NAME>"
+    ],
+    "kind": "read",
+    "description": "Google Model Armor: Sanitize a model response through a Model Armor template.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "modelarmor",
+          "+sanitize-response",
+          "--template",
+          "<NAME>"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "modelarmor",
+      "modelarmor",
+      "+sanitize-response",
+      "Google Model Armor: Sanitize a model response through a Model Armor template."
+    ]
+  },
+  "people.people.searchContacts": {
+    "service": "people",
+    "argv": [
+      "people",
+      "people",
+      "searchContacts"
+    ],
+    "argv_template": [
+      "people",
+      "people",
+      "searchContacts",
+      "--params",
+      "<json-params>"
+    ],
+    "kind": "read",
+    "description": "Search Google People contacts.",
+    "input_notes": "Use gws schema people.people.searchContacts for exact query parameters when needed.",
+    "examples": [
+      {
+        "args": [
+          "people",
+          "people",
+          "searchContacts",
+          "--params",
+          "{\"query\":\"Alice\",\"readMask\":\"names,emailAddresses\"}"
+        ]
+      }
+    ],
+    "keywords": [
+      "people",
+      "contacts",
+      "search"
+    ]
+  },
+  "script.+push": {
+    "service": "script",
+    "argv": [
+      "script",
+      "+push"
+    ],
+    "argv_template": [
+      "script",
+      "+push",
+      "--script",
+      "<ID>"
+    ],
+    "kind": "write",
+    "description": "Google Apps Script: Upload local files to an Apps Script project.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "script",
+          "+push",
+          "--script",
+          "<ID>"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "script",
+      "script",
+      "+push",
+      "Google Apps Script: Upload local files to an Apps Script project."
+    ]
+  },
+  "sheets.+append": {
+    "service": "sheets",
+    "argv": [
+      "sheets",
+      "+append"
+    ],
+    "argv_template": [
+      "sheets",
+      "+append",
+      "--spreadsheet",
+      "<spreadsheet-id>",
+      "--json-values",
+      "<json-rows>"
+    ],
+    "kind": "write",
+    "description": "Append rows to a Google Sheets spreadsheet.",
+    "input_notes": "Use --spreadsheet with the spreadsheet ID and --json-values with a two-dimensional JSON array.",
+    "examples": [
+      {
+        "args": [
+          "sheets",
+          "+append",
+          "--spreadsheet",
+          "<spreadsheet-id>",
+          "--json-values",
+          "[[\"Name\",\"Score\"]]"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "sheets",
+      "spreadsheet",
+      "append",
+      "rows"
+    ]
+  },
+  "sheets.+read": {
+    "service": "sheets",
+    "argv": [
+      "sheets",
+      "+read"
+    ],
+    "argv_template": [
+      "sheets",
+      "+read",
+      "--spreadsheet",
+      "<spreadsheet-id>",
+      "--range",
+      "<a1-range>"
+    ],
+    "kind": "read",
+    "description": "Read a range from a Google Sheets spreadsheet.",
+    "input_notes": "Use --spreadsheet with the spreadsheet ID and --range with A1 notation.",
+    "examples": [
+      {
+        "args": [
+          "sheets",
+          "+read",
+          "--spreadsheet",
+          "<spreadsheet-id>",
+          "--range",
+          "Sheet1!A1:D20"
+        ]
+      }
+    ],
+    "keywords": [
+      "sheets",
+      "spreadsheet",
+      "read",
+      "range",
+      "values"
+    ]
+  },
+  "sheets.spreadsheets.create": {
+    "service": "sheets",
+    "argv": [
+      "sheets",
+      "spreadsheets",
+      "create"
+    ],
+    "argv_template": [
+      "sheets",
+      "spreadsheets",
+      "create",
+      "--json",
+      "<json-body>"
+    ],
+    "kind": "write",
+    "description": "Create a Google Sheets spreadsheet.",
+    "input_notes": "Use --json with {\"properties\":{\"title\":\"...\"}}. Prefer create_google_sheet_with_rows for create-and-populate workflows.",
+    "examples": [
+      {
+        "args": [
+          "sheets",
+          "spreadsheets",
+          "create",
+          "--json",
+          "{\"properties\":{\"title\":\"Test Sheet\"}}"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "sheets",
+      "spreadsheet",
+      "create",
+      "title"
+    ]
+  },
+  "slides.presentations.create": {
+    "service": "slides",
+    "argv": [
+      "slides",
+      "presentations",
+      "create"
+    ],
+    "argv_template": [
+      "slides",
+      "presentations",
+      "create",
+      "--json",
+      "<json-body>"
+    ],
+    "kind": "write",
+    "description": "Create a Google Slides presentation.",
+    "input_notes": "Use --json with the presentation title. Check gws schema slides.presentations.create for exact body fields.",
+    "examples": [
+      {
+        "args": [
+          "slides",
+          "presentations",
+          "create",
+          "--json",
+          "{\"title\":\"Demo\"}"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "slides",
+      "presentation",
+      "create"
+    ]
+  },
+  "tasks.tasklists.list": {
+    "service": "tasks",
+    "argv": [
+      "tasks",
+      "tasklists",
+      "list"
+    ],
+    "kind": "read",
+    "description": "List Google Tasks task lists.",
+    "input_notes": "Use --params for pagination if needed.",
+    "examples": [
+      {
+        "args": [
+          "tasks",
+          "tasklists",
+          "list"
+        ]
+      }
+    ],
+    "keywords": [
+      "tasks",
+      "tasklist",
+      "list"
+    ]
+  },
+  "workflow.+email-to-task": {
+    "service": "workflow",
+    "argv": [
+      "workflow",
+      "+email-to-task"
+    ],
+    "argv_template": [
+      "workflow",
+      "+email-to-task",
+      "--message-id",
+      "<ID>"
+    ],
+    "kind": "read",
+    "description": "Google Workflow: Convert a Gmail message into a Google Tasks entry.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "workflow",
+          "+email-to-task",
+          "--message-id",
+          "<ID>"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "workflow",
+      "workflow",
+      "+email-to-task",
+      "Google Workflow: Convert a Gmail message into a Google Tasks entry."
+    ]
+  },
+  "workflow.+file-announce": {
+    "service": "workflow",
+    "argv": [
+      "workflow",
+      "+file-announce"
+    ],
+    "argv_template": [
+      "workflow",
+      "+file-announce",
+      "--file-id",
+      "<ID>",
+      "--space",
+      "<SPACE>"
+    ],
+    "kind": "write",
+    "description": "Google Workflow: Announce a Drive file in a Chat space.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "workflow",
+          "+file-announce",
+          "--file-id",
+          "<ID>",
+          "--space",
+          "<SPACE>"
+        ]
+      }
+    ],
+    "requires_confirmation": true,
+    "keywords": [
+      "workflow",
+      "workflow",
+      "+file-announce",
+      "Google Workflow: Announce a Drive file in a Chat space."
+    ]
+  },
+  "workflow.+meeting-prep": {
+    "service": "workflow",
+    "argv": [
+      "workflow",
+      "+meeting-prep"
+    ],
+    "argv_template": [
+      "workflow",
+      "+meeting-prep"
+    ],
+    "kind": "read",
+    "description": "Google Workflow: Prepare for your next meeting: agenda, attendees, and linked docs.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "workflow",
+          "+meeting-prep"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "workflow",
+      "workflow",
+      "+meeting-prep",
+      "Google Workflow: Prepare for your next meeting: agenda, attendees, and linked docs."
+    ]
+  },
+  "workflow.+standup-report": {
+    "service": "workflow",
+    "argv": [
+      "workflow",
+      "+standup-report"
+    ],
+    "argv_template": [
+      "workflow",
+      "+standup-report"
+    ],
+    "kind": "read",
+    "description": "Google Workflow: Today's meetings + open tasks as a standup summary.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "workflow",
+          "+standup-report"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "workflow",
+      "workflow",
+      "+standup-report",
+      "Google Workflow: Today's meetings + open tasks as a standup summary."
+    ]
+  },
+  "workflow.+weekly-digest": {
+    "service": "workflow",
+    "argv": [
+      "workflow",
+      "+weekly-digest"
+    ],
+    "argv_template": [
+      "workflow",
+      "+weekly-digest"
+    ],
+    "kind": "read",
+    "description": "Google Workflow: Weekly summary: this week's meetings + unread email count.",
+    "input_notes": "Generated from gws SKILL.md. Confirm exact parameters with get_google_workspace_command_spec or gws schema when needed.",
+    "examples": [
+      {
+        "args": [
+          "workflow",
+          "+weekly-digest"
+        ]
+      }
+    ],
+    "requires_confirmation": false,
+    "keywords": [
+      "workflow",
+      "workflow",
+      "+weekly-digest",
+      "Google Workflow: Weekly summary: this week's meetings + unread email count."
+    ]
+  }
+}

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==============================================================================
-# Lark CLI 构建脚本 (部署/本地统一使用 lark_agent/bin)
+# WebEye Nexus CLI 构建脚本 (部署/本地统一使用 nexus_agent/bin)
 # ==============================================================================
 
 set -e
@@ -16,7 +16,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LIB_DIR="$PROJECT_ROOT/lib"
 SPECIFIC_CLI_DIR="$LIB_DIR/lark-cli-$CLI_VERSION"
-TARGET_DIR="$PROJECT_ROOT/lark_agent/bin"
+TARGET_DIR="$PROJECT_ROOT/nexus_agent/bin"
 TARGET_BIN="$TARGET_DIR/lark-cli"
 
 mkdir -p "$TARGET_DIR"
@@ -45,7 +45,7 @@ cd "$SPECIFIC_CLI_DIR"
 LDFLAGS="-s -w -X github.com/larksuite/cli/internal/build.Version=${CLI_VERSION} -X github.com/larksuite/cli/internal/build.Date=$(date +%Y-%m-%d)"
 
 # 4. 执行编译
-# 部署和本地运行统一使用 lark_agent/bin 下的 Linux amd64 二进制。
+# 部署和本地运行统一使用 nexus_agent/bin 下的 Linux amd64 二进制。
 # 注意：该二进制面向 Agent Engine / Linux 环境，本地 macOS 不直接执行 CLI。
 echo "正在构建统一 CLI 二进制: Linux (amd64)..."
 GOOS=linux GOARCH=amd64 go build -ldflags "$LDFLAGS" -o "$TARGET_BIN" .

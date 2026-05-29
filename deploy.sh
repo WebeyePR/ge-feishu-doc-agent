@@ -7,19 +7,58 @@
 # 设置错误即停止
 set -e
 
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
 # 1. 检查环境与配置
-if [ ! -f ".env" ]; then
-    echo "错误: 未找到 .env 文件。请参考 .env.example 创建并填写配置。"
+ENV_SUFFIX="$1"
+TARGET_ENV=".env"
+if [ -n "$ENV_SUFFIX" ]; then
+    TARGET_ENV=".env-${ENV_SUFFIX}"
+fi
+
+if [ ! -f "$TARGET_ENV" ]; then
+    echo -e "${RED}错误: 未找到 ${TARGET_ENV} 配置文件。请创建并填写配置。${NC}"
     exit 1
 fi
 
 # 设置部署目录
-DEPLOY_DIR=lark_agent/deployement
+DEPLOY_DIR=nexus_agent/deployement
 # 设置 Python 路径
 export PYTHONPATH=$(pwd)
 
 echo "--- 加载配置文件 ---"
-source scripts/load_env.sh
+source scripts/load_env.sh "$ENV_SUFFIX"
+
+echo -e "\n=================================================================="
+echo -e "🔮  ${GREEN}WebEye Nexus Agent 部署配置看板${NC}"
+echo -e "=================================================================="
+echo -e "- 环境后缀 (ENV_SUFFIX):  ${BLUE}${ENV_SUFFIX:-无 (使用默认环境 .env)}${NC}"
+echo -e "- 基础配置文件 (.env):     ${YELLOW}${BASE_ENV_FILE}${NC}"
+echo -e "- 状态部署文件 (.deploy_env): ${YELLOW}${DEPLOY_ENV_FILE}${NC}"
+echo -e "- 目标 GCP 项目 (PROJECT_ID): ${GREEN}${PROJECT_ID}${NC}"
+echo -e "- 目标智能体名称 (DISPLAY_NAME): ${GREEN}${AGENT_DISPLAY_NAME}${NC}"
+echo -e "- 飞书授权 ID (LARK_AUTH_ID): ${GREEN}${LARK_AUTH_ID}${NC}"
+if [ -n "$GOOGLE_WORKSPACE_AUTH_ID" ]; then
+echo -e "- GWS 授权 ID (GWS_AUTH_ID): ${GREEN}${GOOGLE_WORKSPACE_AUTH_ID}${NC}"
+fi
+if [ -n "$GE_AGENT_RESOURCE_NAME" ]; then
+echo -e "- 部署模式:                ${YELLOW}更新部署 (Update Agent Engine)${NC}"
+echo -e "- 已注册 GE Agent 资源:     ${YELLOW}${GE_AGENT_RESOURCE_NAME}${NC}"
+else
+echo -e "- 部署模式:                ${GREEN}首次部署 (Register New Agent)${NC}"
+fi
+echo -e "=================================================================="
+echo -e "请在 5 秒内确认以上信息是否正确，按 ${RED}Ctrl+C${NC} 可安全取消部署..."
+for i in {5..1}; do
+    echo -ne "倒计时: ${YELLOW}$i${NC} 秒...\r"
+    sleep 1
+done
+echo -e "\n==================================================================\n"
 
 # 保存旧的 Reasoning Engine 资源名称以供后续清理
 PREVIOUS_REASONING_ENGINE="$VERTEX_REASONING_ENGINE_NAME"
@@ -63,7 +102,7 @@ if [ -z "$GE_APP_LOCATION" ]; then
 fi
 
 echo "--- [0/4] 正在检查二进制文件(Lark CLI) ---"
-if [ ! -f "lark_agent/bin/lark-cli" ]; then
+if [ ! -f "nexus_agent/bin/lark-cli" ]; then
     echo "未发现 CLI 二进制文件，正在开始构建..."
     bash scripts/build_cli.sh
 else
@@ -71,27 +110,27 @@ else
 fi
 
 echo "--- [0/4] 正在检查二进制文件(Google Workspace CLI) ---"
-if [ ! -f "lark_agent/bin/gws" ]; then
-    echo "错误: 未发现 Google Workspace CLI 二进制文件: lark_agent/bin/gws"
-    echo "请从 googleworkspace/cli release 下载 Linux amd64 版本并放入 lark_agent/bin/gws。"
+if [ ! -f "nexus_agent/bin/gws" ]; then
+    echo "错误: 未发现 Google Workspace CLI 二进制文件: nexus_agent/bin/gws"
+    echo "请从 googleworkspace/cli release 下载 Linux amd64 版本并放入 nexus_agent/bin/gws。"
     exit 1
 fi
 
 echo "--- [1/4] 正在使用 UV 打包应用 ---"
 # 清理旧的构建文件
 rm -rf dist/ build/ *.egg-info
-rm -f $DEPLOY_DIR/adk_agents-0.1.0-py3-none-any.whl
+rm -f $DEPLOY_DIR/ge_nexus_agent-1.0.0-py3-none-any.whl
 # uv build 会自动处理构建依赖
 uv build --wheel --out-dir $DEPLOY_DIR
 
 echo "--- [2/4] 正在部署到 Vertex AI Reasoning Engine ---"
-# 在根目录运行部署脚本，确保模块导入和 PYTHONPATH 正确
-uv run python lark_agent/deployement/deploy.py
+# 在根目录运行部署脚本，确保模块导入 and PYTHONPATH 正确
+uv run python nexus_agent/deployement/deploy.py
 
 # 重新加载部署生成的变量
-source scripts/load_env.sh
-if [ -z "$GE_AGENT_RESOURCE_NAME" ] && [ ! -f ".deploy_env" ]; then
-    echo "错误: 部署失败，未能生成 .deploy_env。"
+source scripts/load_env.sh "$ENV_SUFFIX"
+if [ -z "$GE_AGENT_RESOURCE_NAME" ] && [ ! -f "$DEPLOY_ENV_FILE" ]; then
+    echo "错误: 部署失败，未能生成 $DEPLOY_ENV_FILE。"
     exit 1
 fi
 
@@ -105,7 +144,7 @@ else
 fi
 
 # 重新加载部署生成的变量 (包含刚刚生成的 GE_AGENT_RESOURCE_NAME)
-source scripts/load_env.sh
+source scripts/load_env.sh "$ENV_SUFFIX"
 
 # 清理旧的 Reasoning Engine 资源 (避免云端资源累积和持续计费)
 if [ -n "$PREVIOUS_REASONING_ENGINE" ] && [ "$PREVIOUS_REASONING_ENGINE" != "$VERTEX_REASONING_ENGINE_NAME" ]; then

@@ -25,7 +25,7 @@ class CLICommandRegistry:
         初始化平台命令行注册表。
         
         Args:
-            package_name: 该平台注册表所在的 Python 包名（例如 'lark_agent.lark_registry'）。
+            package_name: 该平台注册表所在的 Python 包名（例如 'nexus_agent.lark_registry'）。
             config_name: 索引配置文件的名称（默认为 'commands.json'）。
         """
         self.package_name = package_name

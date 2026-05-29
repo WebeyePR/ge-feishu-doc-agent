@@ -5,7 +5,7 @@ Lark CLI Command Index Builder
 ------------------------------
 此脚本用于扫描并解析 bundled 的 lark-cli 技能文件（包括各个技能主目录下的 SKILL.md
 以及 references 目录下的子引用 md 文档），智能提取支持的快捷命令和 API 示例，
-并输出为高保真的本地命令注册表 lark_agent/lark_registry/commands.json。
+并输出为高保真本地命令注册表 nexus_agent/lark_registry/commands.json。
 
 本设计考虑了高内聚、低耦合、模块化，并为未来支持更多平台（如钉钉、企业微信等）
 留出了底座设计和扩展接口。
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # 项目根目录与默认路径
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SKILLS_DIR = ROOT / "lib" / "lark-cli-v1.0.40" / "skills"
-DEFAULT_OUTPUT = ROOT / "lark_agent" / "lark_registry" / "commands.json"
+DEFAULT_OUTPUT = ROOT / "nexus_agent" / "lark_registry" / "commands.json"
 
 # 默认的变动型（写/修改）命令及快捷方法词表，用于安全审计识别
 MUTATING_VERBS: Set[str] = {

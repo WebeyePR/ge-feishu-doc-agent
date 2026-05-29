@@ -1,7 +1,7 @@
 [project]
-name = "adk-agents"
-version = "0.1.0"
-description = "Add your description here"
+name = "ge-nexus-agent"
+version = "1.0.0"
+description = "WebEye Nexus Agent for Gemini Enterprise - Corporate Agent based on Google ADK"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -21,12 +21,12 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["lark_agent*"]
+include = ["nexus_agent*"]
 
 [tool.setuptools.package-data]
 # 声明打包包含的非 py 资源文件，确保部署及发布后的 wheel 包中包含必要的执行器与命令注册表。
 # 早期关于上传超时的疑虑已在最新的 deploy 脚本超时机制中完美解决，此处需完整打包以保证自省功能高可用。
-lark_agent = [
+nexus_agent = [
     "bin/lark-cli",
     "bin/gws",
     "gws_registry/commands.json",

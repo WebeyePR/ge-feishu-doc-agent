@@ -36,7 +36,7 @@ fi
 echo "🔄 gcloud 命令不可用或失败，尝试通过 API 接口直接删除..."
 TOKEN=$(gcloud auth print-access-token)
 
-response=$(curl -s -X DELETE \
+response=$(curl --http1.1 -s -X DELETE \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -H "X-Goog-User-Project: ${PROJECT_ID}" \

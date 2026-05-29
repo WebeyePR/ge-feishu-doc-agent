@@ -24,7 +24,7 @@ fi
 
 echo "正在删除 Agent: $AGENT_NAME"
 
-response=$(curl -X DELETE \
+response=$(curl --http1.1 -X DELETE \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
   -H "X-Goog-User-Project: ${PROJECT_ID}" \

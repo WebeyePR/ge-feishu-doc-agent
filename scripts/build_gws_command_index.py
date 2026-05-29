@@ -9,7 +9,7 @@ from typing import Any, Dict, Iterable, List
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SKILLS_DIR = ROOT / "lib" / "gws-cli-v0.22.5" / "skills"
-DEFAULT_OUTPUT = ROOT / "lark_agent" / "gws_registry" / "commands.json"
+DEFAULT_OUTPUT = ROOT / "nexus_agent" / "gws_registry" / "commands.json"
 
 MUTATING_METHODS = {
     "append",

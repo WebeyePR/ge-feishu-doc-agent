@@ -14,7 +14,7 @@ echo "=========================================="
 echo "=== 1. 所有 Agent 列表 ==="
 echo "=========================================="
 
-agents_response=$(curl -s -X GET \
+agents_response=$(curl --http1.1 -s -X GET \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
   -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -49,7 +49,7 @@ echo "=========================================="
 echo "=== 2. 所有授权资源列表 ==="
 echo "=========================================="
 
-auths_response=$(curl -s -X GET \
+auths_response=$(curl --http1.1 -s -X GET \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
   -H "X-Goog-User-Project: ${PROJECT_ID}" \

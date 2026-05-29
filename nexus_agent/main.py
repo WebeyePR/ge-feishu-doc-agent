@@ -5,7 +5,7 @@ from google.adk import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
-from lark_agent import root_agent
+from nexus_agent import root_agent
 
 
 async def main():
@@ -15,7 +15,7 @@ async def main():
                                          session_id='92b9a134-df38-4e47-b814-4554f1c91657')
     runner = Runner(agent=root_agent, app_name='app', session_service=session_service)
 
-    print("--- Lark Agent CLI Started ---")
+    print("--- WebEye Nexus Agent CLI Started ---")
     print("Type 'exit' or 'quit' to end the session.\n")
 
     while True:

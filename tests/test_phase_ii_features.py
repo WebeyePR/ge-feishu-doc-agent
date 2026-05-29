@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from lark_agent import tools as lark_tools
+from nexus_agent import tools as lark_tools
 
 
 def test_get_lark_document_markdown_lazy_loading(monkeypatch):
@@ -63,7 +63,7 @@ def test_get_lark_document_markdown_soft_failure_on_download_error(monkeypatch):
         def get(self, url, headers=None, timeout=None):
             raise Exception("Connection timeout")
 
-    import lark_agent.infrastructure.lark_api_repository as repo
+    import nexus_agent.infrastructure.lark_api_repository as repo
     monkeypatch.setattr(repo, "_session", MockSession())
 
     # 4. Call get_lark_document_markdown with download_images=True
@@ -133,7 +133,7 @@ def test_lark_cli_client_polymorphic_signatures(monkeypatch):
     针对 CLIClient 的全新多态 run_command 方法进行完备的单元测试，
     同时验证历史遗留签名（风格 2）与新加固统一签名（风格 1）在解析和传参上的 100% 正确。
     """
-    from lark_agent.infrastructure.cli_client import cli_client
+    from nexus_agent.infrastructure.cli_client import cli_client
 
     captured_runs = []
 
@@ -265,9 +265,9 @@ def test_registry_tokenizer_boundary_conditions():
     极限测试 3：对通用 CLICommandRegistry 里的 _tokenize 分词器进行极端边界校验（如 None, "", 纯符号, Unicode 混淆词素等），
     确保其不发生异常崩溃（crash-safe）并具备优秀的降级和分词合并机制。
     """
-    from lark_agent.lark_registry.registry import CLICommandRegistry
+    from nexus_agent.lark_registry.registry import CLICommandRegistry
     
-    registry = CLICommandRegistry("lark_agent")
+    registry = CLICommandRegistry("nexus_agent")
 
     # 1. 测试 None 输入
     assert registry._tokenize(None) == set()
@@ -333,7 +333,7 @@ def test_concurrent_execution_isolation(monkeypatch):
     """
     高阶测试 1：验证多线程/多协程并发请求下，HOME 隔离临时目录 tmp_home 的绝对独立分配与执行完毕后的完全清理。
     """
-    from lark_agent.infrastructure.cli_client import cli_client
+    from nexus_agent.infrastructure.cli_client import cli_client
     import concurrent.futures
 
     allocated_homes = set()
@@ -376,7 +376,7 @@ def test_log_redaction_and_truncation():
     """
     高阶测试 2：验证 _format_args_for_log 方法对敏感命令行 Flag 的无泄漏脱敏以及超长参数安全截断。
     """
-    from lark_agent.infrastructure.cli_client import cli_client
+    from nexus_agent.infrastructure.cli_client import cli_client
 
     # 1. 验证敏感 flags（如 --json, --body, --text, --params）的内容被重写为 <redacted>
     sensitive_args = ["lark-cli", "im", "message", "send", "--text", "my_secret_token_abc_123"]
@@ -404,7 +404,7 @@ def test_cli_error_handling_and_non_zero_exit(monkeypatch):
     """
     高阶测试 3：验证底层 _run 执行器在遭遇进程非零退出状态码（如 returncode=1）或 stderr 抛错时的优雅容错，不发生 panic。
     """
-    from lark_agent.infrastructure.cli_client import cli_client
+    from nexus_agent.infrastructure.cli_client import cli_client
     import subprocess
 
     class MockCompletedProcess:
@@ -435,7 +435,7 @@ def test_raw_plain_text_stdout_fallback():
     """
     高阶测试 4：验证 _parse_stdout 方法在面对非标准 JSON、多行杂乱纯文本、或带空字符的标准输出时的强韧抗震降级表现。
     """
-    from lark_agent.infrastructure.cli_client import cli_client
+    from nexus_agent.infrastructure.cli_client import cli_client
 
     # 1. 验证常规纯文本
     raw_text = "Some raw description text from command output."

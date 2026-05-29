@@ -11,7 +11,7 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 AGENT_DISPLAY_NAME="${AGENT_DISPLAY_NAME:-Lark Document Agent}"
 AGENT_DESCRIPTION="${AGENT_DESCRIPTION:-Lark Document Agent}"
 
-source "$SCRIPT_DIR/load_env.sh"
+source "$SCRIPT_DIR/load_env.sh" "$1"
 
 # 检查必要参数
 if [ -z "$PROJECT_ID" ] || [ -z "$LARK_AUTH_ID" ] || [ -z "$LARK_CLIENT_ID" ] || [ -z "$VERTEX_REASONING_ENGINE_NAME" ] || [ -z "$GE_APP_ID" ] || [ -z "$GE_APP_LOCATION" ]; then
@@ -70,7 +70,7 @@ PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectN
 AUTH_RESOURCES=("\"projects/$PROJECT_NUMBER/locations/${GE_APP_LOCATION}/authorizations/$LARK_AUTH_ID\"")
 
 echo "1. 正在创建 OAuth 授权资源: $LARK_AUTH_ID ..."
-LARK_AUTH_RESPONSE=$(curl -s -X POST \
+LARK_AUTH_RESPONSE=$(curl --http1.1 -s -X POST \
    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
    -H "Content-Type: application/json" \
    -H "X-Goog-User-Project: $PROJECT_ID" \
@@ -137,7 +137,7 @@ print(json.dumps(payload, ensure_ascii=False))
 PY
 
     echo -e "\n\n1b. 正在创建 Google Workspace OAuth 授权资源: $GOOGLE_WORKSPACE_AUTH_ID ..."
-    GWS_AUTH_RESPONSE=$(curl -s -X POST \
+    GWS_AUTH_RESPONSE=$(curl --http1.1 -s -X POST \
        -H "Authorization: Bearer $(gcloud auth print-access-token)" \
        -H "Content-Type: application/json" \
        -H "X-Goog-User-Project: $PROJECT_ID" \
@@ -153,7 +153,7 @@ fi
 AUTH_RESOURCES_JSON=$(IFS=,; echo "${AUTH_RESOURCES[*]}")
 
 echo -e "\n\n2. 正在将 Agent 注册到 Gemini Enterprise ..."
-RESPONSE=$(curl -s -X POST \
+RESPONSE=$(curl --http1.1 -s -X POST \
 -H "Authorization: Bearer $(gcloud auth print-access-token)" \
 -H "Content-Type: application/json" \
 -H "X-Goog-User-Project: $PROJECT_ID" \
@@ -179,8 +179,8 @@ AGENT_NAME=$(echo $RESPONSE | grep -o '"name": *"[^"]*"' | head -1 | cut -d'"' -
 
 if [ -n "$AGENT_NAME" ] && [[ "$AGENT_NAME" == *"agents/"* ]]; then
     echo -e "\n注册成功！Agent 资源名: $AGENT_NAME"
-    uv run python -c "import dotenv; dotenv.set_key('$ROOT_DIR/.deploy_env', 'GE_AGENT_RESOURCE_NAME', '$AGENT_NAME', quote_mode='always')"
-    echo "已同步 GE_AGENT_RESOURCE_NAME 到 .deploy_env"
+    uv run python -c "import dotenv; dotenv.set_key('$DEPLOY_ENV_FILE', 'GE_AGENT_RESOURCE_NAME', '$AGENT_NAME', quote_mode='always')"
+    echo "已同步 GE_AGENT_RESOURCE_NAME 到 $DEPLOY_ENV_FILE"
 else
     echo -e "\n警告: 未能从响应中识别出 Agent 资源名，请检查输出。"
 fi

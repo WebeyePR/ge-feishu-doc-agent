@@ -33,8 +33,8 @@
     "requires_confirmation": false,
     "keywords": [
       "api",
-      "universal",
-      "lark-cli"
+      "lark-cli",
+      "universal"
     ]
   },
   "api./open-apis/bitable/v1/...": {
@@ -62,12 +62,9 @@
     "requires_confirmation": false,
     "keywords": [
       "api",
+      "",
       "lark-base",
-      "api",
-      "/open-apis/bitable/v1/",
-      "",
-      "",
-      ""
+      "/open-apis/bitable/v1/"
     ]
   },
   "api.GET./open-apis/im/v1/messages": {
@@ -102,10 +99,9 @@
     "requires_confirmation": false,
     "keywords": [
       "api",
-      "lark-im",
-      "api",
+      "/open-apis/im/v1/messages",
       "GET",
-      "/open-apis/im/v1/messages"
+      "lark-im"
     ]
   },
   "api.GET./open-apis/vc/v1/rooms": {
@@ -140,10 +136,9 @@
     "requires_confirmation": false,
     "keywords": [
       "api",
-      "lark-skill-maker",
-      "api",
       "GET",
-      "/open-apis/vc/v1/rooms"
+      "/open-apis/vc/v1/rooms",
+      "lark-skill-maker"
     ]
   },
   "api.PATCH./open-apis/im/v1/chats/oc_xxx/announcement": {
@@ -179,9 +174,8 @@
     "keywords": [
       "api",
       "lark-openapi-explorer",
-      "api",
-      "PATCH",
-      "/open-apis/im/v1/chats/oc_xxx/announcement"
+      "/open-apis/im/v1/chats/oc_xxx/announcement",
+      "PATCH"
     ]
   },
   "api.POST./open-apis/contact/v3/departments/search": {
@@ -231,10 +225,9 @@
     "requires_confirmation": false,
     "keywords": [
       "api",
-      "lark-wiki",
-      "api",
       "POST",
-      "/open-apis/contact/v3/departments/search"
+      "/open-apis/contact/v3/departments/search",
+      "lark-wiki"
     ]
   },
   "api.POST./open-apis/im/v1/chats/oc_xxx/members": {
@@ -274,9 +267,8 @@
     "keywords": [
       "api",
       "lark-openapi-explorer",
-      "api",
-      "POST",
-      "/open-apis/im/v1/chats/oc_xxx/members"
+      "/open-apis/im/v1/chats/oc_xxx/members",
+      "POST"
     ]
   },
   "api.POST./open-apis/vc/v1/rooms/search": {
@@ -311,10 +303,9 @@
     "requires_confirmation": false,
     "keywords": [
       "api",
-      "lark-skill-maker",
-      "api",
       "POST",
-      "/open-apis/vc/v1/rooms/search"
+      "/open-apis/vc/v1/rooms/search",
+      "lark-skill-maker"
     ]
   },
   "api.POST./open-apis/xxx": {
@@ -349,10 +340,9 @@
     "requires_confirmation": false,
     "keywords": [
       "api",
-      "lark-skill-maker",
-      "api",
       "POST",
-      "/open-apis/xxx"
+      "/open-apis/xxx",
+      "lark-skill-maker"
     ]
   },
   "apps.+access-scope-get": {
@@ -383,10 +373,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+access-scope-get",
       "apps",
-      "lark-apps",
-      "apps",
-      "+access-scope-get"
+      "lark-apps"
     ]
   },
   "apps.+access-scope-set": {
@@ -447,10 +436,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+access-scope-set",
       "apps",
-      "lark-apps",
-      "apps",
-      "+access-scope-set"
+      "lark-apps"
     ]
   },
   "apps.+create": {
@@ -510,10 +498,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+create",
       "apps",
-      "lark-apps",
-      "apps",
-      "+create"
+      "lark-apps"
     ]
   },
   "apps.+html-publish": {
@@ -599,10 +586,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+html-publish",
       "apps",
-      "lark-apps",
-      "apps",
-      "+html-publish"
+      "lark-apps"
     ]
   },
   "apps.+list": {
@@ -653,10 +639,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+list",
       "apps",
-      "lark-apps",
-      "apps",
-      "+list"
+      "lark-apps"
     ]
   },
   "apps.+update": {
@@ -713,10 +698,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+update",
       "apps",
-      "lark-apps",
-      "apps",
-      "+update"
+      "lark-apps"
     ]
   },
   "base.+...": {
@@ -743,13 +727,10 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "",
       "lark-base",
       "base",
-      "+",
-      "",
-      "",
-      ""
+      "+"
     ]
   },
   "base.+advperm-disable": {
@@ -780,10 +761,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+advperm-disable",
       "lark-base",
-      "base",
-      "+advperm-disable"
+      "base"
     ]
   },
   "base.+advperm-enable": {
@@ -814,7 +794,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+advperm-enable"
@@ -867,10 +846,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+base-copy",
       "lark-base",
-      "base",
-      "+base-copy"
+      "base"
     ]
   },
   "base.+base-create": {
@@ -913,7 +891,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+base-create"
@@ -947,10 +924,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+base-get",
       "lark-base",
-      "base",
-      "+base-get"
+      "base"
     ]
   },
   "base.+dashboard-arrange": {
@@ -985,7 +961,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+dashboard-arrange"
@@ -1027,10 +1002,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+dashboard-block-delete",
       "lark-base",
-      "base",
-      "+dashboard-block-delete"
+      "base"
     ]
   },
   "base.+dashboard-block-get": {
@@ -1081,7 +1055,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+dashboard-block-get"
@@ -1129,7 +1102,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+dashboard-block-list"
@@ -1175,7 +1147,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+dashboard-block-update"
@@ -1235,10 +1206,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+dashboard-create",
       "lark-base",
-      "base",
-      "+dashboard-create"
+      "base"
     ]
   },
   "base.+dashboard-delete": {
@@ -1273,7 +1243,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+dashboard-delete"
@@ -1321,10 +1290,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+dashboard-get",
       "lark-base",
-      "base",
-      "+dashboard-get"
+      "base"
     ]
   },
   "base.+dashboard-list": {
@@ -1363,7 +1331,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+dashboard-list"
@@ -1409,7 +1376,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+dashboard-update"
@@ -1481,10 +1447,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+field-create",
       "lark-base",
-      "base",
-      "+field-create"
+      "base"
     ]
   },
   "base.+field-create/+field-update": {
@@ -1515,7 +1480,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+field-create/+field-update"
@@ -1559,7 +1523,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+field-delete"
@@ -1601,7 +1564,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+field-get"
@@ -1677,7 +1639,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+field-list"
@@ -1731,7 +1692,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+field-search-options"
@@ -1800,7 +1760,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+field-update"
@@ -1884,7 +1843,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+form-create"
@@ -1939,7 +1897,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+form-delete"
@@ -2012,10 +1969,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+form-detail",
       "lark-base",
-      "base",
-      "+form-detail"
+      "base"
     ]
   },
   "base.+form-get": {
@@ -2082,10 +2038,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+form-get",
       "lark-base",
-      "base",
-      "+form-get"
+      "base"
     ]
   },
   "base.+form-list": {
@@ -2154,10 +2109,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+form-list",
       "lark-base",
-      "base",
-      "+form-list"
+      "base"
     ]
   },
   "base.+form-questions-create": {
@@ -2256,10 +2210,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+form-questions-create",
       "lark-base",
-      "base",
-      "+form-questions-create"
+      "base"
     ]
   },
   "base.+form-questions-delete": {
@@ -2331,10 +2284,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+form-questions-delete",
       "lark-base",
-      "base",
-      "+form-questions-delete"
+      "base"
     ]
   },
   "base.+form-questions-list": {
@@ -2401,7 +2353,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+form-questions-list"
@@ -2475,10 +2426,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+form-questions-update",
       "lark-base",
-      "base",
-      "+form-questions-update"
+      "base"
     ]
   },
   "base.+form-submit": {
@@ -2546,10 +2496,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+form-submit",
       "lark-base",
-      "base",
-      "+form-submit"
+      "base"
     ]
   },
   "base.+form-update": {
@@ -2636,7 +2585,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+form-update"
@@ -2690,7 +2638,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+record-batch-create"
@@ -2744,7 +2691,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+record-batch-update"
@@ -2816,10 +2762,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+record-delete",
       "lark-base",
-      "base",
-      "+record-delete"
+      "base"
     ]
   },
   "base.+record-download-attachment": {
@@ -2858,10 +2803,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+record-download-attachment",
       "lark-base",
-      "base",
-      "+record-download-attachment"
+      "base"
     ]
   },
   "base.+record-history-list": {
@@ -2916,7 +2860,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+record-history-list"
@@ -2972,10 +2915,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+record-list",
       "lark-base",
-      "base",
-      "+record-list"
+      "base"
     ]
   },
   "base.+record-remove-attachment": {
@@ -3016,10 +2958,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+record-remove-attachment",
       "lark-base",
-      "base",
-      "+record-remove-attachment"
+      "base"
     ]
   },
   "base.+record-share-link-create": {
@@ -3070,7 +3011,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+record-share-link-create"
@@ -3112,7 +3052,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+record-upload-attachment"
@@ -3168,10 +3107,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+record-upsert",
       "lark-base",
-      "base",
-      "+record-upsert"
+      "base"
     ]
   },
   "base.+role-create": {
@@ -3216,7 +3154,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+role-create"
@@ -3254,10 +3191,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+role-delete",
       "lark-base",
-      "base",
-      "+role-delete"
+      "base"
     ]
   },
   "base.+role-get": {
@@ -3292,7 +3228,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+role-get"
@@ -3326,7 +3261,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+role-list"
@@ -3380,7 +3314,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+role-update"
@@ -3448,7 +3381,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+table-create"
@@ -3488,10 +3420,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+table-delete",
       "lark-base",
-      "base",
-      "+table-delete"
+      "base"
     ]
   },
   "base.+table-get": {
@@ -3536,10 +3467,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+table-get",
       "lark-base",
-      "base",
-      "+table-get"
+      "base"
     ]
   },
   "base.+table-list": {
@@ -3598,7 +3528,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+table-list"
@@ -3640,7 +3569,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+table-update"
@@ -3682,10 +3610,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-create",
       "lark-base",
-      "base",
-      "+view-create"
+      "base"
     ]
   },
   "base.+view-delete": {
@@ -3724,7 +3651,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+view-delete"
@@ -3766,10 +3692,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-get",
       "lark-base",
-      "base",
-      "+view-get"
+      "base"
     ]
   },
   "base.+view-get-card": {
@@ -3808,10 +3733,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-get-card",
       "lark-base",
-      "base",
-      "+view-get-card"
+      "base"
     ]
   },
   "base.+view-get-filter": {
@@ -3850,7 +3774,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+view-get-filter"
@@ -3892,10 +3815,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-get-group",
       "lark-base",
-      "base",
-      "+view-get-group"
+      "base"
     ]
   },
   "base.+view-get-sort": {
@@ -3934,7 +3856,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+view-get-sort"
@@ -3976,10 +3897,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-get-timebar",
       "lark-base",
-      "base",
-      "+view-get-timebar"
+      "base"
     ]
   },
   "base.+view-get-visible-fields": {
@@ -4018,10 +3938,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-get-visible-fields",
       "lark-base",
-      "base",
-      "+view-get-visible-fields"
+      "base"
     ]
   },
   "base.+view-list": {
@@ -4064,10 +3983,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-list",
       "lark-base",
-      "base",
-      "+view-list"
+      "base"
     ]
   },
   "base.+view-rename": {
@@ -4110,10 +4028,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-rename",
       "lark-base",
-      "base",
-      "+view-rename"
+      "base"
     ]
   },
   "base.+view-set-card": {
@@ -4156,10 +4073,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-set-card",
       "lark-base",
-      "base",
-      "+view-set-card"
+      "base"
     ]
   },
   "base.+view-set-filter": {
@@ -4186,7 +4102,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+view-set-filter"
@@ -4246,7 +4161,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+view-set-group"
@@ -4306,7 +4220,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+view-set-sort"
@@ -4352,10 +4265,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-set-timebar",
       "lark-base",
-      "base",
-      "+view-set-timebar"
+      "base"
     ]
   },
   "base.+view-set-visible-fields": {
@@ -4398,10 +4310,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+view-set-visible-fields",
       "lark-base",
-      "base",
-      "+view-set-visible-fields"
+      "base"
     ]
   },
   "base.+workflow-create": {
@@ -4436,10 +4347,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+workflow-create",
       "lark-base",
-      "base",
-      "+workflow-create"
+      "base"
     ]
   },
   "base.+workflow-disable": {
@@ -4474,10 +4384,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+workflow-disable",
       "lark-base",
-      "base",
-      "+workflow-disable"
+      "base"
     ]
   },
   "base.+workflow-enable": {
@@ -4512,10 +4421,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
+      "+workflow-enable",
       "lark-base",
-      "base",
-      "+workflow-enable"
+      "base"
     ]
   },
   "base.+workflow-get": {
@@ -4562,7 +4470,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+workflow-get"
@@ -4616,10 +4523,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "base",
+      "+workflow-list",
       "lark-base",
-      "base",
-      "+workflow-list"
+      "base"
     ]
   },
   "base.+workflow-update": {
@@ -4658,7 +4564,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "base",
       "lark-base",
       "base",
       "+workflow-update"
@@ -4734,10 +4639,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "calendar",
+      "+agenda",
       "lark-calendar",
-      "calendar",
-      "+agenda"
+      "calendar"
     ]
   },
   "calendar.+create": {
@@ -4820,10 +4724,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "calendar",
       "lark-calendar",
-      "calendar",
-      "+create"
+      "+create",
+      "calendar"
     ]
   },
   "calendar.+freebusy": {
@@ -4900,10 +4803,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "calendar",
       "lark-calendar",
-      "calendar",
-      "+freebusy"
+      "+freebusy",
+      "calendar"
     ]
   },
   "calendar.+room-find": {
@@ -4996,10 +4898,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "calendar",
       "lark-calendar",
-      "calendar",
-      "+room-find"
+      "+room-find",
+      "calendar"
     ]
   },
   "calendar.+rsvp": {
@@ -5066,10 +4967,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "calendar",
+      "+rsvp",
       "lark-calendar",
-      "calendar",
-      "+rsvp"
+      "calendar"
     ]
   },
   "calendar.+suggestion": {
@@ -5170,10 +5070,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "calendar",
       "lark-calendar",
-      "calendar",
-      "+suggestion"
+      "+suggestion",
+      "calendar"
     ]
   },
   "calendar.+update": {
@@ -5282,10 +5181,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "calendar",
+      "+update",
       "lark-calendar",
-      "calendar",
-      "+update"
+      "calendar"
     ]
   },
   "calendar.calendars.list": {
@@ -5317,11 +5215,10 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "calendar",
-      "lark-calendar",
-      "calendar",
       "calendars",
-      "list"
+      "lark-calendar",
+      "list",
+      "calendar"
     ]
   },
   "calendar.event.attendees.create": {
@@ -5359,10 +5256,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "calendar",
+      "event",
       "lark-calendar",
       "calendar",
-      "event",
       "attendees",
       "create"
     ]
@@ -5398,11 +5294,10 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "calendar",
-      "lark-calendar",
-      "calendar",
       "events",
-      "delete"
+      "lark-calendar",
+      "delete",
+      "calendar"
     ]
   },
   "contact.+get-user": {
@@ -5461,10 +5356,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "contact",
       "lark-contact",
-      "contact",
-      "+get-user"
+      "+get-user",
+      "contact"
     ]
   },
   "contact.+search-user": {
@@ -5632,10 +5526,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "contact",
+      "+search-user",
       "lark-apps",
-      "contact",
-      "+search-user"
+      "contact"
     ]
   },
   "docs.+create": {
@@ -5738,7 +5631,6 @@
     "keywords": [
       "docs",
       "lark-doc",
-      "docs",
       "+create"
     ]
   },
@@ -5914,10 +5806,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+fetch",
       "docs",
-      "lark-doc",
-      "docs",
-      "+fetch"
+      "lark-doc"
     ]
   },
   "docs.+media-download": {
@@ -6006,10 +5897,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+media-download",
       "docs",
-      "lark-doc",
-      "docs",
-      "+media-download"
+      "lark-doc"
     ]
   },
   "docs.+media-insert": {
@@ -6127,7 +6017,6 @@
     "keywords": [
       "docs",
       "lark-doc",
-      "docs",
       "+media-insert"
     ]
   },
@@ -6187,7 +6076,6 @@
     "keywords": [
       "docs",
       "lark-doc",
-      "docs",
       "+media-preview"
     ]
   },
@@ -6274,7 +6162,6 @@
     "keywords": [
       "docs",
       "lark-whiteboard",
-      "docs",
       "+media-upload"
     ]
   },
@@ -6576,10 +6463,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+update",
       "docs",
-      "lark-doc",
-      "docs",
-      "+update"
+      "lark-doc"
     ]
   },
   "drive.+add-comment": {
@@ -6845,9 +6731,8 @@
     "requires_confirmation": true,
     "keywords": [
       "drive",
-      "lark-drive",
-      "drive",
-      "+add-comment"
+      "+add-comment",
+      "lark-drive"
     ]
   },
   "drive.+apply-permission": {
@@ -6912,7 +6797,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+apply-permission"
     ]
   },
@@ -6979,7 +6863,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+create-folder"
     ]
   },
@@ -7057,9 +6940,8 @@
     "requires_confirmation": false,
     "keywords": [
       "drive",
-      "lark-drive",
-      "drive",
-      "+create-shortcut"
+      "+create-shortcut",
+      "lark-drive"
     ]
   },
   "drive.+delete": {
@@ -7120,7 +7002,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+delete"
     ]
   },
@@ -7166,7 +7047,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+download"
     ]
   },
@@ -7345,10 +7225,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+export",
       "drive",
-      "lark-drive",
-      "drive",
-      "+export"
+      "lark-drive"
     ]
   },
   "drive.+export-download": {
@@ -7412,7 +7291,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+export-download"
     ]
   },
@@ -7631,7 +7509,6 @@
     "keywords": [
       "drive",
       "lark-base",
-      "drive",
       "+import"
     ]
   },
@@ -7719,7 +7596,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+inspect"
     ]
   },
@@ -7794,9 +7670,8 @@
     "requires_confirmation": true,
     "keywords": [
       "drive",
-      "lark-drive",
-      "drive",
-      "+move"
+      "+move",
+      "lark-drive"
     ]
   },
   "drive.+pull": {
@@ -7879,10 +7754,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+pull",
       "drive",
-      "lark-drive",
-      "drive",
-      "+pull"
+      "lark-drive"
     ]
   },
   "drive.+push": {
@@ -7970,9 +7844,8 @@
     "requires_confirmation": false,
     "keywords": [
       "drive",
-      "lark-drive",
-      "drive",
-      "+push"
+      "+push",
+      "lark-drive"
     ]
   },
   "drive.+search": {
@@ -8291,7 +8164,6 @@
     "keywords": [
       "drive",
       "lark-base",
-      "drive",
       "+search"
     ]
   },
@@ -8351,9 +8223,8 @@
     "requires_confirmation": false,
     "keywords": [
       "drive",
-      "lark-drive",
-      "drive",
-      "+status"
+      "+status",
+      "lark-drive"
     ]
   },
   "drive.+task_result": {
@@ -8464,10 +8335,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+task_result",
       "drive",
-      "lark-drive",
-      "drive",
-      "+task_result"
+      "lark-drive"
     ]
   },
   "drive.+upload": {
@@ -8578,7 +8448,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+upload"
     ]
   },
@@ -8635,7 +8504,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+version-delete"
     ]
   },
@@ -8718,7 +8586,6 @@
     "keywords": [
       "drive",
       "lark-drive",
-      "drive",
       "+version-get"
     ]
   },
@@ -8796,9 +8663,8 @@
     "requires_confirmation": false,
     "keywords": [
       "drive",
-      "lark-drive",
-      "drive",
-      "+version-history"
+      "+version-history",
+      "lark-drive"
     ]
   },
   "drive.+version-revert": {
@@ -8849,10 +8715,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+version-revert",
       "drive",
-      "lark-drive",
-      "drive",
-      "+version-revert"
+      "lark-drive"
     ]
   },
   "drive.file.comment.reply.reactions.update_reaction": {
@@ -8901,12 +8766,11 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "drive",
-      "lark-drive",
-      "drive",
+      "reply",
       "file",
       "comment",
-      "reply",
+      "lark-drive",
+      "drive",
       "reactions",
       "update_reaction"
     ]
@@ -8942,13 +8806,12 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "drive",
+      "comment",
+      "file",
       "lark-drive",
       "drive",
-      "file",
-      "comment",
-      "replys",
-      "list"
+      "list",
+      "replys"
     ]
   },
   "drive.file.comments.batch_query": {
@@ -8986,12 +8849,11 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "drive",
+      "file",
       "lark-drive",
       "drive",
-      "file",
-      "comments",
-      "batch_query"
+      "batch_query",
+      "comments"
     ]
   },
   "drive.file.comments.create_v2": {
@@ -9036,12 +8898,11 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "drive",
+      "file",
       "lark-drive",
       "drive",
-      "file",
-      "comments",
-      "create_v2"
+      "create_v2",
+      "comments"
     ]
   },
   "drive.file.comments.create_v2....": {
@@ -9074,16 +8935,12 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "drive",
+      "",
+      "file",
       "lark-drive",
       "drive",
-      "file",
-      "comments",
       "create_v2",
-      "",
-      "",
-      "",
-      ""
+      "comments"
     ]
   },
   "drive.file.comments.list": {
@@ -9117,10 +8974,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "drive",
+      "file",
       "lark-drive",
       "drive",
-      "file",
       "comments",
       "list"
     ]
@@ -9152,10 +9008,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "files",
       "drive",
       "lark-drive",
-      "drive",
-      "files",
       "create_folder"
     ]
   },
@@ -9198,10 +9053,9 @@
     "requires_confirmation": false,
     "keywords": [
       "drive",
-      "lark-vc",
-      "drive",
+      "batch_query",
       "metas",
-      "batch_query"
+      "lark-vc"
     ]
   },
   "drive.permission.members.create": {
@@ -9237,7 +9091,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "drive",
       "lark-slides",
       "drive",
       "permission",
@@ -9272,11 +9125,10 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "drive",
+      "public",
       "lark-drive",
       "drive",
       "permission",
-      "public",
       "patch"
     ]
   },
@@ -9310,10 +9162,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+subscribe",
       "event",
-      "lark-task",
-      "event",
-      "+subscribe"
+      "lark-task"
     ]
   },
   "event.consume": {
@@ -9359,7 +9210,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "event",
       "lark-event",
       "event",
       "consume"
@@ -9403,13 +9253,12 @@
     "requires_confirmation": false,
     "keywords": [
       "event",
-      "lark-event",
-      "event",
-      "consume",
-      "im",
       "message",
+      "lark-event",
       "reaction",
-      "created_v1"
+      "created_v1",
+      "im",
+      "consume"
     ]
   },
   "event.consume.im.message.receive_v1": {
@@ -9479,13 +9328,12 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "receive_v1",
       "event",
-      "lark-event",
-      "event",
-      "consume",
-      "im",
       "message",
-      "receive_v1"
+      "lark-event",
+      "im",
+      "consume"
     ]
   },
   "event.list": {
@@ -9521,10 +9369,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "event",
+      "list",
       "lark-event",
-      "event",
-      "list"
+      "event"
     ]
   },
   "event.status": {
@@ -9555,7 +9402,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "event",
       "lark-event",
       "event",
       "status"
@@ -9589,7 +9435,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "event",
       "lark-event",
       "event",
       "stop"
@@ -9801,10 +9646,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+chat-create",
       "im",
-      "lark-im",
-      "im",
-      "+chat-create"
+      "lark-im"
     ]
   },
   "im.+chat-list": {
@@ -9877,10 +9721,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+chat-list",
       "im",
-      "lark-im",
-      "im",
-      "+chat-list"
+      "lark-im"
     ]
   },
   "im.+chat-messages-list": {
@@ -10013,10 +9856,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+chat-messages-list",
       "im",
-      "lark-im",
-      "im",
-      "+chat-messages-list"
+      "lark-im"
     ]
   },
   "im.+chat-search": {
@@ -10187,10 +10029,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+chat-search",
       "im",
-      "lark-apps",
-      "im",
-      "+chat-search"
+      "lark-apps"
     ]
   },
   "im.+chat-update": {
@@ -10264,10 +10105,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+chat-update",
       "im",
-      "lark-im",
-      "im",
-      "+chat-update"
+      "lark-im"
     ]
   },
   "im.+flag-cancel": {
@@ -10345,10 +10185,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+flag-cancel",
       "im",
-      "lark-im",
-      "im",
-      "+flag-cancel"
+      "lark-im"
     ]
   },
   "im.+flag-create": {
@@ -10428,7 +10267,6 @@
     "keywords": [
       "im",
       "lark-im",
-      "im",
       "+flag-create"
     ]
   },
@@ -10530,10 +10368,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+flag-list",
       "im",
-      "lark-im",
-      "im",
-      "+flag-list"
+      "lark-im"
     ]
   },
   "im.+messages-mget": {
@@ -10615,10 +10452,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+messages-mget",
       "im",
-      "lark-im",
-      "im",
-      "+messages-mget"
+      "lark-im"
     ]
   },
   "im.+messages-reply": {
@@ -10647,7 +10483,6 @@
     "keywords": [
       "im",
       "lark-im",
-      "im",
       "+messages-reply"
     ]
   },
@@ -10746,10 +10581,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+messages-resources-download",
       "im",
-      "lark-im",
-      "im",
-      "+messages-resources-download"
+      "lark-im"
     ]
   },
   "im.+messages-search": {
@@ -11073,10 +10907,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+messages-search",
       "im",
-      "lark-im",
-      "im",
-      "+messages-search"
+      "lark-im"
     ]
   },
   "im.+messages-send": {
@@ -11127,10 +10960,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "im",
+      "+messages-send",
       "lark-contact",
-      "im",
-      "+messages-send"
+      "im"
     ]
   },
   "im.+threads-messages-list": {
@@ -11254,10 +11086,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+threads-messages-list",
       "im",
-      "lark-im",
-      "im",
-      "+threads-messages-list"
+      "lark-im"
     ]
   },
   "im.chat.members.create": {
@@ -11299,12 +11130,11 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "im",
-      "lark-im",
-      "im",
       "chat",
+      "lark-im",
       "members",
-      "create"
+      "create",
+      "im"
     ]
   },
   "im.reactions.create": {
@@ -11342,11 +11172,10 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "im",
-      "lark-im",
-      "im",
       "reactions",
-      "create"
+      "create",
+      "im",
+      "lark-im"
     ]
   },
   "mail.+decline-receipt": {
@@ -11402,10 +11231,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+decline-receipt",
       "mail",
-      "lark-mail",
-      "mail",
-      "+decline-receipt"
+      "lark-mail"
     ]
   },
   "mail.+draft-create": {
@@ -11501,7 +11329,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+draft-create"
     ]
   },
@@ -11580,7 +11407,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+draft-edit"
     ]
   },
@@ -11694,7 +11520,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+forward"
     ]
   },
@@ -11770,7 +11595,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+message"
     ]
   },
@@ -11848,7 +11672,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+messages"
     ]
   },
@@ -11966,7 +11789,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+reply"
     ]
   },
@@ -12088,7 +11910,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+reply-all"
     ]
   },
@@ -12247,9 +12068,8 @@
     "requires_confirmation": true,
     "keywords": [
       "mail",
-      "lark-mail",
-      "mail",
-      "+send"
+      "+send",
+      "lark-mail"
     ]
   },
   "mail.+send-receipt": {
@@ -12307,7 +12127,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+send-receipt"
     ]
   },
@@ -12377,9 +12196,8 @@
     "requires_confirmation": false,
     "keywords": [
       "mail",
-      "lark-mail",
-      "mail",
-      "+share-to-chat"
+      "+share-to-chat",
+      "lark-mail"
     ]
   },
   "mail.+signature": {
@@ -12424,7 +12242,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+signature"
     ]
   },
@@ -12519,7 +12336,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+template-create"
     ]
   },
@@ -12609,7 +12425,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+template-update"
     ]
   },
@@ -12685,7 +12500,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+thread"
     ]
   },
@@ -12825,10 +12639,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+triage",
       "mail",
-      "lark-mail",
-      "mail",
-      "+triage"
+      "lark-mail"
     ]
   },
   "mail.+watch": {
@@ -12935,7 +12748,6 @@
     "keywords": [
       "mail",
       "lark-mail",
-      "mail",
       "+watch"
     ]
   },
@@ -12974,10 +12786,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "multi_entity",
       "mail",
       "lark-mail",
-      "mail",
-      "multi_entity",
       "search"
     ]
   },
@@ -13009,11 +12820,10 @@
     "requires_confirmation": false,
     "keywords": [
       "mail",
-      "lark-mail",
-      "mail",
+      "get",
       "user_mailbox",
-      "drafts",
-      "get"
+      "lark-mail",
+      "drafts"
     ]
   },
   "mail.user_mailbox.drafts.send": {
@@ -13052,12 +12862,11 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "mail",
-      "lark-mail",
+      "send",
       "mail",
       "user_mailbox",
-      "drafts",
-      "send"
+      "lark-mail",
+      "drafts"
     ]
   },
   "mail.user_mailbox.message.attachments.download_url": {
@@ -13087,13 +12896,12 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "mail",
-      "lark-mail",
+      "message",
+      "download_url",
       "mail",
       "user_mailbox",
-      "message",
-      "attachments",
-      "download_url"
+      "lark-mail",
+      "attachments"
     ]
   },
   "mail.user_mailbox.messages": {
@@ -13123,10 +12931,9 @@
     "requires_confirmation": false,
     "keywords": [
       "mail",
+      "messages",
       "lark-mail",
-      "mail",
-      "user_mailbox",
-      "messages"
+      "user_mailbox"
     ]
   },
   "mail.user_mailbox.messages.get": {
@@ -13157,11 +12964,10 @@
     "requires_confirmation": false,
     "keywords": [
       "mail",
-      "lark-mail",
-      "mail",
-      "user_mailbox",
       "messages",
-      "get"
+      "get",
+      "user_mailbox",
+      "lark-mail"
     ]
   },
   "mail.user_mailbox.messages.list": {
@@ -13192,11 +12998,10 @@
     "requires_confirmation": false,
     "keywords": [
       "mail",
-      "lark-mail",
-      "mail",
-      "user_mailbox",
       "messages",
-      "list"
+      "user_mailbox",
+      "list",
+      "lark-mail"
     ]
   },
   "mail.user_mailbox.messages.modify_message": {
@@ -13226,12 +13031,11 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "modify_message",
       "mail",
-      "lark-mail",
-      "mail",
-      "user_mailbox",
       "messages",
-      "modify_message"
+      "user_mailbox",
+      "lark-mail"
     ]
   },
   "mail.user_mailbox.messages.send_status": {
@@ -13262,10 +13066,9 @@
     "requires_confirmation": false,
     "keywords": [
       "mail",
-      "lark-mail",
-      "mail",
-      "user_mailbox",
       "messages",
+      "user_mailbox",
+      "lark-mail",
       "send_status"
     ]
   },
@@ -13300,12 +13103,11 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "mail",
-      "lark-mail",
+      "templates",
+      "delete",
       "mail",
       "user_mailbox",
-      "templates",
-      "delete"
+      "lark-mail"
     ]
   },
   "mail.user_mailbox.templates.get": {
@@ -13339,12 +13141,11 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "mail",
-      "lark-mail",
-      "mail",
-      "user_mailbox",
       "templates",
-      "get"
+      "mail",
+      "get",
+      "user_mailbox",
+      "lark-mail"
     ]
   },
   "mail.user_mailbox.templates.list": {
@@ -13378,12 +13179,11 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "mail",
-      "lark-mail",
+      "templates",
       "mail",
       "user_mailbox",
-      "templates",
-      "list"
+      "list",
+      "lark-mail"
     ]
   },
   "mail.user_mailbox.templates.{list|get|delete}....": {
@@ -13416,16 +13216,12 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "mail",
-      "lark-mail",
+      "",
+      "templates",
       "mail",
       "user_mailbox",
-      "templates",
       "{list|get|delete}",
-      "",
-      "",
-      "",
-      ""
+      "lark-mail"
     ]
   },
   "mail.user_mailboxes.profile": {
@@ -13460,10 +13256,9 @@
     "requires_confirmation": false,
     "keywords": [
       "mail",
+      "profile",
       "lark-mail",
-      "mail",
-      "user_mailboxes",
-      "profile"
+      "user_mailboxes"
     ]
   },
   "markdown.+create": {
@@ -13557,7 +13352,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "markdown",
       "lark-markdown",
       "markdown",
       "+create"
@@ -13646,10 +13440,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "markdown",
+      "+diff",
       "lark-drive",
-      "markdown",
-      "+diff"
+      "markdown"
     ]
   },
   "markdown.+fetch": {
@@ -13726,10 +13519,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "markdown",
+      "+fetch",
       "lark-markdown",
-      "markdown",
-      "+fetch"
+      "markdown"
     ]
   },
   "markdown.+overwrite": {
@@ -13809,7 +13601,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "markdown",
       "lark-markdown",
       "markdown",
       "+overwrite"
@@ -13901,7 +13692,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "markdown",
       "lark-markdown",
       "markdown",
       "+patch"
@@ -14014,9 +13804,8 @@
     "requires_confirmation": false,
     "keywords": [
       "minutes",
-      "lark-minutes",
-      "minutes",
-      "+download"
+      "+download",
+      "lark-minutes"
     ]
   },
   "minutes.+search": {
@@ -14216,9 +14005,8 @@
     "requires_confirmation": false,
     "keywords": [
       "minutes",
-      "lark-minutes",
-      "minutes",
-      "+search"
+      "+search",
+      "lark-minutes"
     ]
   },
   "minutes.+speaker-replace": {
@@ -14263,10 +14051,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+speaker-replace",
       "minutes",
-      "lark-minutes",
-      "minutes",
-      "+speaker-replace"
+      "lark-minutes"
     ]
   },
   "minutes.+update": {
@@ -14307,10 +14094,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+update",
       "minutes",
-      "lark-minutes",
-      "minutes",
-      "+update"
+      "lark-minutes"
     ]
   },
   "minutes.+upload": {
@@ -14354,9 +14140,8 @@
     "requires_confirmation": true,
     "keywords": [
       "minutes",
-      "lark-minutes",
-      "minutes",
-      "+upload"
+      "+upload",
+      "lark-minutes"
     ]
   },
   "minutes.minutes.get": {
@@ -14417,11 +14202,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "get",
       "minutes",
-      "lark-minutes",
-      "minutes",
-      "minutes",
-      "get"
+      "lark-minutes"
     ]
   },
   "okr.+cycle-detail": {
@@ -14471,7 +14254,6 @@
     "keywords": [
       "okr",
       "lark-okr",
-      "okr",
       "+cycle-detail"
     ]
   },
@@ -14538,7 +14320,6 @@
     "keywords": [
       "okr",
       "lark-okr",
-      "okr",
       "+cycle-list"
     ]
   },
@@ -14619,9 +14400,8 @@
     "requires_confirmation": false,
     "keywords": [
       "okr",
-      "lark-okr",
-      "okr",
-      "+progress-create"
+      "+progress-create",
+      "lark-okr"
     ]
   },
   "okr.+progress-delete": {
@@ -14663,7 +14443,6 @@
     "keywords": [
       "okr",
       "lark-okr",
-      "okr",
       "+progress-delete"
     ]
   },
@@ -14715,9 +14494,8 @@
     "requires_confirmation": false,
     "keywords": [
       "okr",
-      "lark-okr",
-      "okr",
-      "+progress-get"
+      "+progress-get",
+      "lark-okr"
     ]
   },
   "okr.+progress-list": {
@@ -14774,7 +14552,6 @@
     "keywords": [
       "okr",
       "lark-okr",
-      "okr",
       "+progress-list"
     ]
   },
@@ -14856,9 +14633,8 @@
     "requires_confirmation": false,
     "keywords": [
       "okr",
-      "lark-okr",
-      "okr",
-      "+progress-update"
+      "+progress-update",
+      "lark-okr"
     ]
   },
   "okr.+upload-image": {
@@ -14923,7 +14699,6 @@
     "keywords": [
       "okr",
       "lark-okr",
-      "okr",
       "+upload-image"
     ]
   },
@@ -14973,7 +14748,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+add-dimension"
@@ -15021,7 +14795,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+append"
@@ -15065,7 +14838,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+batch-set-style"
@@ -15123,7 +14895,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+copy-sheet"
@@ -15194,7 +14965,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+create"
@@ -15256,7 +15026,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+create-filter-view"
@@ -15340,10 +15109,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+create-filter-view-condition"
+      "+create-filter-view-condition",
+      "sheets"
     ]
   },
   "sheets.+create-float-image": {
@@ -15400,7 +15168,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+create-float-image"
@@ -15456,10 +15223,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+create-sheet"
+      "+create-sheet",
+      "sheets"
     ]
   },
   "sheets.+delete-dimension": {
@@ -15512,7 +15278,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+delete-dimension"
@@ -15556,10 +15321,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+delete-dropdown"
+      "+delete-dropdown",
+      "sheets"
     ]
   },
   "sheets.+delete-filter-view": {
@@ -15604,10 +15368,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+delete-filter-view"
+      "+delete-filter-view",
+      "sheets"
     ]
   },
   "sheets.+delete-filter-view-condition": {
@@ -15656,7 +15419,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+delete-filter-view-condition"
@@ -15704,10 +15466,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+delete-float-image"
+      "+delete-float-image",
+      "sheets"
     ]
   },
   "sheets.+delete-sheet": {
@@ -15748,10 +15509,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+delete-sheet"
+      "+delete-sheet",
+      "sheets"
     ]
   },
   "sheets.+export": {
@@ -15820,10 +15580,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+export"
+      "+export",
+      "sheets"
     ]
   },
   "sheets.+find": {
@@ -15885,7 +15644,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+find"
@@ -15929,7 +15687,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+get-dropdown"
@@ -15977,10 +15734,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+get-filter-view"
+      "+get-filter-view",
+      "sheets"
     ]
   },
   "sheets.+get-filter-view-condition": {
@@ -16029,10 +15785,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+get-filter-view-condition"
+      "+get-filter-view-condition",
+      "sheets"
     ]
   },
   "sheets.+get-float-image": {
@@ -16077,7 +15832,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+get-float-image"
@@ -16134,10 +15888,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+info"
+      "+info",
+      "sheets"
     ]
   },
   "sheets.+insert-dimension": {
@@ -16190,7 +15943,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+insert-dimension"
@@ -16238,7 +15990,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+list-filter-view-conditions"
@@ -16282,7 +16033,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+list-filter-views"
@@ -16326,7 +16076,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+list-float-images"
@@ -16370,7 +16119,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+media-upload"
@@ -16418,7 +16166,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+merge-cells"
@@ -16478,7 +16225,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+move-dimension"
@@ -16534,10 +16280,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+read"
+      "+read",
+      "sheets"
     ]
   },
   "sheets.+replace": {
@@ -16601,10 +16346,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+replace"
+      "+replace",
+      "sheets"
     ]
   },
   "sheets.+set-dropdown": {
@@ -16662,7 +16406,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+set-dropdown"
@@ -16722,7 +16465,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+set-style"
@@ -16766,7 +16508,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+unmerge-cells"
@@ -16824,10 +16565,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+update-dimension"
+      "+update-dimension",
+      "sheets"
     ]
   },
   "sheets.+update-dropdown": {
@@ -16876,10 +16616,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+update-dropdown"
+      "+update-dropdown",
+      "sheets"
     ]
   },
   "sheets.+update-filter-view": {
@@ -16928,10 +16667,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+update-filter-view"
+      "+update-filter-view",
+      "sheets"
     ]
   },
   "sheets.+update-filter-view-condition": {
@@ -16992,7 +16730,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+update-filter-view-condition"
@@ -17052,10 +16789,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
-      "sheets",
-      "+update-float-image"
+      "+update-float-image",
+      "sheets"
     ]
   },
   "sheets.+update-sheet": {
@@ -17137,7 +16873,6 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+update-sheet"
@@ -17213,7 +16948,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+write"
@@ -17289,7 +17023,6 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "sheets",
       "lark-sheets",
       "sheets",
       "+write-image"
@@ -17353,9 +17086,8 @@
     "requires_confirmation": true,
     "keywords": [
       "slides",
-      "lark-slides",
-      "slides",
-      "+create"
+      "+create",
+      "lark-slides"
     ]
   },
   "slides.+media-upload": {
@@ -17430,9 +17162,8 @@
     "requires_confirmation": false,
     "keywords": [
       "slides",
-      "lark-slides",
-      "slides",
-      "+media-upload"
+      "+media-upload",
+      "lark-slides"
     ]
   },
   "slides.+replace-slide": {
@@ -17596,9 +17327,8 @@
     "requires_confirmation": false,
     "keywords": [
       "slides",
-      "lark-slides",
-      "slides",
-      "+replace-slide"
+      "+replace-slide",
+      "lark-slides"
     ]
   },
   "slides.xml_presentation.slide.create": {
@@ -17653,12 +17383,11 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "slides",
       "lark-slides",
       "slides",
       "xml_presentation",
-      "slide",
-      "create"
+      "create",
+      "slide"
     ]
   },
   "slides.xml_presentation.slide.delete": {
@@ -17696,12 +17425,11 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "slides",
       "lark-slides",
+      "delete",
       "slides",
       "xml_presentation",
-      "slide",
-      "delete"
+      "slide"
     ]
   },
   "slides.xml_presentation.slide.get": {
@@ -17750,12 +17478,11 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "slides",
       "lark-slides",
+      "get",
       "slides",
       "xml_presentation",
-      "slide",
-      "get"
+      "slide"
     ]
   },
   "slides.xml_presentation.slide.replace": {
@@ -17797,12 +17524,11 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "slides",
       "lark-slides",
+      "replace",
       "slides",
       "xml_presentation",
-      "slide",
-      "replace"
+      "slide"
     ]
   },
   "slides.xml_presentations.get": {
@@ -17852,10 +17578,9 @@
     "requires_confirmation": false,
     "keywords": [
       "slides",
-      "lark-slides",
-      "slides",
+      "get",
       "xml_presentations",
-      "get"
+      "lark-slides"
     ]
   },
   "task.+assign": {
@@ -17922,10 +17647,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+assign",
       "task",
-      "lark-task",
-      "task",
-      "+assign"
+      "lark-task"
     ]
   },
   "task.+comment": {
@@ -17970,10 +17694,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+comment",
       "task",
-      "lark-task",
-      "task",
-      "+comment"
+      "lark-task"
     ]
   },
   "task.+complete": {
@@ -18004,10 +17727,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+complete",
       "task",
-      "lark-task",
-      "task",
-      "+complete"
+      "lark-task"
     ]
   },
   "task.+create": {
@@ -18090,10 +17812,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+create",
       "task",
-      "lark-task",
-      "task",
-      "+create"
+      "lark-task"
     ]
   },
   "task.+followers": {
@@ -18150,7 +17871,6 @@
     "keywords": [
       "task",
       "lark-task",
-      "task",
       "+followers"
     ]
   },
@@ -18235,10 +17955,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+get-my-tasks",
       "task",
-      "lark-task",
-      "task",
-      "+get-my-tasks"
+      "lark-task"
     ]
   },
   "task.+get-related-tasks": {
@@ -18288,10 +18007,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+get-related-tasks",
       "task",
-      "lark-task",
-      "task",
-      "+get-related-tasks"
+      "lark-task"
     ]
   },
   "task.+reminder": {
@@ -18346,10 +18064,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+reminder",
       "task",
-      "lark-task",
-      "task",
-      "+reminder"
+      "lark-task"
     ]
   },
   "task.+reopen": {
@@ -18380,10 +18097,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+reopen",
       "task",
-      "lark-task",
-      "task",
-      "+reopen"
+      "lark-task"
     ]
   },
   "task.+search": {
@@ -18442,7 +18158,6 @@
     "keywords": [
       "task",
       "lark-task",
-      "task",
       "+search"
     ]
   },
@@ -18493,10 +18208,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+set-ancestor",
       "task",
-      "lark-task",
-      "task",
-      "+set-ancestor"
+      "lark-task"
     ]
   },
   "task.+subscribe-event": {
@@ -18533,10 +18247,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+subscribe-event",
       "task",
-      "lark-task",
-      "task",
-      "+subscribe-event"
+      "lark-task"
     ]
   },
   "task.+tasklist-create": {
@@ -18594,10 +18307,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+tasklist-create",
       "task",
-      "lark-task",
-      "task",
-      "+tasklist-create"
+      "lark-task"
     ]
   },
   "task.+tasklist-members": {
@@ -18652,10 +18364,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+tasklist-members",
       "task",
-      "lark-task",
-      "task",
-      "+tasklist-members"
+      "lark-task"
     ]
   },
   "task.+tasklist-search": {
@@ -18711,10 +18422,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+tasklist-search",
       "task",
-      "lark-task",
-      "task",
-      "+tasklist-search"
+      "lark-task"
     ]
   },
   "task.+tasklist-task-add": {
@@ -18780,7 +18490,6 @@
     "keywords": [
       "task",
       "lark-task",
-      "task",
       "+tasklist-task-add"
     ]
   },
@@ -18845,10 +18554,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+update",
       "task",
-      "lark-task",
-      "task",
-      "+update"
+      "lark-task"
     ]
   },
   "task.+upload-attachment": {
@@ -18929,10 +18637,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+upload-attachment",
       "task",
-      "lark-task",
-      "task",
-      "+upload-attachment"
+      "lark-task"
     ]
   },
   "task.tasklists.list": {
@@ -18968,11 +18675,10 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "task",
-      "lark-task",
-      "task",
       "tasklists",
-      "list"
+      "list",
+      "task",
+      "lark-task"
     ]
   },
   "vc.+meeting-events": {
@@ -19120,7 +18826,6 @@
     "keywords": [
       "vc",
       "lark-vc-agent",
-      "vc",
       "+meeting-events"
     ]
   },
@@ -19191,7 +18896,6 @@
     "keywords": [
       "vc",
       "lark-vc-agent",
-      "vc",
       "+meeting-join"
     ]
   },
@@ -19266,7 +18970,6 @@
     "keywords": [
       "vc",
       "lark-vc-agent",
-      "vc",
       "+meeting-leave"
     ]
   },
@@ -19437,10 +19140,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+notes",
       "vc",
-      "lark-minutes",
-      "vc",
-      "+notes"
+      "lark-minutes"
     ]
   },
   "vc.+recording": {
@@ -19562,7 +19264,6 @@
     "keywords": [
       "vc",
       "lark-minutes",
-      "vc",
       "+recording"
     ]
   },
@@ -19792,7 +19493,6 @@
     "keywords": [
       "vc",
       "lark-vc",
-      "vc",
       "+search"
     ]
   },
@@ -19856,10 +19556,9 @@
     "requires_confirmation": false,
     "keywords": [
       "vc",
-      "lark-vc",
-      "vc",
       "meeting",
-      "get"
+      "get",
+      "lark-vc"
     ]
   },
   "whiteboard.+query": {
@@ -19921,10 +19620,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "whiteboard",
       "lark-whiteboard",
-      "whiteboard",
-      "+query"
+      "+query",
+      "whiteboard"
     ]
   },
   "whiteboard.+update": {
@@ -19986,10 +19684,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "whiteboard",
+      "+update",
       "lark-whiteboard",
-      "whiteboard",
-      "+update"
+      "whiteboard"
     ]
   },
   "wiki.+delete-space": {
@@ -20040,10 +19737,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+delete-space",
       "wiki",
-      "lark-wiki",
-      "wiki",
-      "+delete-space"
+      "lark-wiki"
     ]
   },
   "wiki.+member-add": {
@@ -20120,7 +19816,6 @@
     "keywords": [
       "wiki",
       "lark-wiki",
-      "wiki",
       "+member-add"
     ]
   },
@@ -20212,10 +19907,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+member-list",
       "wiki",
-      "lark-wiki",
-      "wiki",
-      "+member-list"
+      "lark-wiki"
     ]
   },
   "wiki.+member-remove": {
@@ -20293,10 +19987,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+member-remove",
       "wiki",
-      "lark-wiki",
-      "wiki",
-      "+member-remove"
+      "lark-wiki"
     ]
   },
   "wiki.+move": {
@@ -20381,10 +20074,9 @@
     ],
     "requires_confirmation": true,
     "keywords": [
+      "+move",
       "wiki",
-      "lark-wiki",
-      "wiki",
-      "+move"
+      "lark-wiki"
     ]
   },
   "wiki.+node-copy": {
@@ -20423,10 +20115,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+node-copy",
       "wiki",
-      "lark-wiki",
-      "wiki",
-      "+node-copy"
+      "lark-wiki"
     ]
   },
   "wiki.+node-create": {
@@ -20542,10 +20233,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+node-create",
       "wiki",
-      "lark-wiki",
-      "wiki",
-      "+node-create"
+      "lark-wiki"
     ]
   },
   "wiki.+node-delete": {
@@ -20587,10 +20277,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+node-delete",
       "wiki",
-      "lark-wiki",
-      "wiki",
-      "+node-delete"
+      "lark-wiki"
     ]
   },
   "wiki.+node-get": {
@@ -20633,10 +20322,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "wiki",
+      "+node-get",
       "lark-base",
-      "wiki",
-      "+node-get"
+      "wiki"
     ]
   },
   "wiki.+node-list": {
@@ -20729,7 +20417,6 @@
     "keywords": [
       "wiki",
       "lark-wiki",
-      "wiki",
       "+node-list"
     ]
   },
@@ -20769,10 +20456,9 @@
     ],
     "requires_confirmation": false,
     "keywords": [
+      "+space-create",
       "wiki",
-      "lark-wiki",
-      "wiki",
-      "+space-create"
+      "lark-wiki"
     ]
   },
   "wiki.+space-list": {
@@ -20841,7 +20527,6 @@
     "keywords": [
       "wiki",
       "lark-wiki",
-      "wiki",
       "+space-list"
     ]
   },
@@ -20876,11 +20561,10 @@
     ],
     "requires_confirmation": true,
     "keywords": [
-      "wiki",
-      "lark-drive",
-      "wiki",
       "spaces",
-      "get"
+      "lark-drive",
+      "get",
+      "wiki"
     ]
   },
   "wiki.spaces.get_node": {
@@ -20939,11 +20623,10 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "wiki",
-      "lark-base",
-      "wiki",
+      "get_node",
       "spaces",
-      "get_node"
+      "lark-base",
+      "wiki"
     ]
   },
   "wiki.spaces.list": {
@@ -20977,11 +20660,10 @@
     ],
     "requires_confirmation": false,
     "keywords": [
-      "wiki",
-      "lark-wiki",
-      "wiki",
+      "list",
       "spaces",
-      "list"
+      "wiki",
+      "lark-wiki"
     ]
   }
 }

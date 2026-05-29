@@ -3,8 +3,8 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from lark_agent.infrastructure.lark_api_repository import _extract_mcp_result, _normalize_mcp_tool_result
-from lark_agent import tools as lark_tools
+from nexus_agent.infrastructure.lark_api_repository import _extract_mcp_result, _normalize_mcp_tool_result
+from nexus_agent import tools as lark_tools
 
 
 def test_extract_mcp_result_parses_single_json_text_content():

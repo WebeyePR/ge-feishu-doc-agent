@@ -13,35 +13,49 @@ L_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 获取项目根目录 (假设此脚本在 scripts/ 目录下)
 L_ROOT_DIR="$(dirname "$L_SCRIPT_DIR")"
 
+# 支持指定环境后缀，优先通过参数传递，其次通过环境变量传递
+ENV_SUFFIX="${1:-$ENV_SUFFIX}"
+
+BASE_ENV_NAME=".env"
+DEPLOY_ENV_NAME=".deploy_env"
+
+if [ -n "$ENV_SUFFIX" ]; then
+    BASE_ENV_NAME=".env-${ENV_SUFFIX}"
+    DEPLOY_ENV_NAME=".deploy_env-${ENV_SUFFIX}"
+fi
+
+# 导出当前的物理配置文件绝对路径，供 Python 和其他脚本使用，确保全链路读写同一物理文件
+export BASE_ENV_FILE="$L_ROOT_DIR/$BASE_ENV_NAME"
+export DEPLOY_ENV_FILE="$L_ROOT_DIR/$DEPLOY_ENV_NAME"
+export ENV_SUFFIX
+
 # 如果当前不在根目录，且根目录存在相应配置文件，则加载
 # 使用 set -a 确保所有加载的变量都会被自动 export
 
-# 1. 加载基础配置 .env
-if [ -f "$L_ROOT_DIR/.env" ]; then
-    # echo "--- 自动加载 .env ---"
+# 1. 加载基础配置
+if [ -f "$BASE_ENV_FILE" ]; then
     set -a
-    source "$L_ROOT_DIR/.env"
+    source "$BASE_ENV_FILE"
     set +a
 fi
 
-# 2. 加载部署生成配置 .deploy_env
-if [ -f "$L_ROOT_DIR/.deploy_env" ]; then
-    # echo "--- 自动加载 .deploy_env ---"
+# 2. 加载部署生成配置
+if [ -f "$DEPLOY_ENV_FILE" ]; then
     set -a
-    source "$L_ROOT_DIR/.deploy_env"
+    source "$DEPLOY_ENV_FILE"
     set +a
 fi
 
-# 如果还是没有加载到必要变量（比如在根目录运行且上述逻辑没触发），尝试直接在当前目录查找
+# 如果还是没有加载到必要变量，尝试直接在当前目录查找 (以防 CWD 变化且不匹配 L_ROOT_DIR)
 if [ -z "$PROJECT_ID" ]; then
-    if [ -f ".env" ]; then
+    if [ -f "$BASE_ENV_NAME" ]; then
         set -a
-        source .env
+        source "$BASE_ENV_NAME"
         set +a
     fi
-    if [ -f ".deploy_env" ]; then
+    if [ -f "$DEPLOY_ENV_NAME" ]; then
         set -a
-        source .deploy_env
+        source "$DEPLOY_ENV_NAME"
         set +a
     fi
 fi

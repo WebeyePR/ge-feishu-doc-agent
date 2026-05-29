@@ -7,7 +7,7 @@ GE_APP_LOCATION="${GE_APP_LOCATION:-global}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-source "$SCRIPT_DIR/load_env.sh"
+source "$SCRIPT_DIR/load_env.sh" "$1"
 
 # 检查必要参数
 if [ -z "$PROJECT_ID" ] || [ -z "$GE_AGENT_RESOURCE_NAME" ] || [ -z "$VERTEX_REASONING_ENGINE_NAME" ] || [ -z "$GE_APP_LOCATION" ]; then
@@ -23,8 +23,8 @@ echo "Target Agent: WebEye Nexus Agent"
 echo "New Engine: $NEW_REASONING_ENGINE"
 
 
-# 使用 PATCH 请求更新
-curl -X PATCH \
+# 使用 PATCH 请求更新，指定 --http1.1 避免 HTTP/2 Framing error 报错
+curl --http1.1 -X PATCH \
 -H "Authorization: Bearer $(gcloud auth print-access-token)" \
 -H "Content-Type: application/json" \
 -H "X-Goog-User-Project: $PROJECT_ID" \

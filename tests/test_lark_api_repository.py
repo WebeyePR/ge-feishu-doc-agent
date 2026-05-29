@@ -5,10 +5,10 @@ import logging
 import requests
 from dotenv import load_dotenv, find_dotenv
 
-# 添加项目根目录到 path，以便导入 lark_agent
+# 添加项目根目录到 path，以便导入 nexus_agent
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from lark_agent.infrastructure.lark_api_repository import (
+from nexus_agent.infrastructure.lark_api_repository import (
     get_document_content,
     get_document_rich_text_by_block,
     get_document_as_pdf,

@@ -4,8 +4,8 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from lark_agent import tools as lark_tools
-from lark_agent.infrastructure.cli_client import GoogleWorkspaceCLIClient, PackagedCLIClient
+from nexus_agent import tools as lark_tools
+from nexus_agent.infrastructure.cli_client import GoogleWorkspaceCLIClient, PackagedCLIClient
 
 
 def test_search_google_drive_files_builds_safe_gws_command(monkeypatch):
@@ -133,7 +133,7 @@ def test_google_workspace_cli_client_preserves_existing_ca_bundle(tmp_path, monk
 
 def test_packaged_cli_resolves_package_bin_only(tmp_path, monkeypatch):
     project_root = tmp_path / "project"
-    package_root = project_root / "lark_agent"
+    package_root = project_root / "nexus_agent"
     infra_root = package_root / "infrastructure"
     project_bin = project_root / "bin"
     package_bin = package_root / "bin"
@@ -145,7 +145,7 @@ def test_packaged_cli_resolves_package_bin_only(tmp_path, monkeypatch):
 
     fake_file = infra_root / "cli_client.py"
     monkeypatch.setattr(
-        "lark_agent.infrastructure.cli_client.__file__",
+        "nexus_agent.infrastructure.cli_client.__file__",
         str(fake_file),
     )
 

@@ -18,7 +18,7 @@ echo "请选择要删除的资源类型:"
 echo "1. 删除 Agent"
 echo "2. 删除授权资源"
 echo "3. 删除未使用的授权资源（没有被任何 Agent 使用）"
-echo "4. 删除所有 Lark Document Agent（保留其他）"
+echo "4. 删除所有 WebEye Nexus Agent 及 Lark Document Agent（保留其他）"
 echo "5. 退出"
 echo ""
 read -p "请选择 (1-5): " choice
@@ -36,7 +36,7 @@ case $choice in
         fi
         
         echo "正在删除 Agent..."
-        response=$(curl -X DELETE \
+        response=$(curl --http1.1 -X DELETE \
           -H "Authorization: Bearer $(gcloud auth print-access-token)" \
           -H "Content-Type: application/json" \
           -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -65,7 +65,7 @@ case $choice in
         fi
         
         echo "正在删除授权资源..."
-        response=$(curl -X DELETE \
+        response=$(curl --http1.1 -X DELETE \
           -H "Authorization: Bearer $(gcloud auth print-access-token)" \
           -H "Content-Type: application/json" \
           -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -88,7 +88,7 @@ case $choice in
         echo "正在查找未使用的授权资源..."
         
         # 获取所有 Agent 使用的授权资源
-        agents_response=$(curl -s -X GET \
+        agents_response=$(curl --http1.1 -s -X GET \
           -H "Authorization: Bearer $(gcloud auth print-access-token)" \
           -H "Content-Type: application/json" \
           -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -108,7 +108,7 @@ for auth_id in sorted(used):
 ")
         
         # 获取所有授权资源
-        auths_response=$(curl -s -X GET \
+        auths_response=$(curl --http1.1 -s -X GET \
           -H "Authorization: Bearer $(gcloud auth print-access-token)" \
           -H "Content-Type: application/json" \
           -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -144,7 +144,7 @@ except Exception:
             if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
                 for auth_id in $unused_auths; do
                     echo "正在删除: $auth_id"
-                    curl -X DELETE \
+                    curl --http1.1 -X DELETE \
                       -H "Authorization: Bearer $(gcloud auth print-access-token)" \
                       -H "Content-Type: application/json" \
                       -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -160,10 +160,10 @@ except Exception:
         
     4)
         echo ""
-        echo "警告: 这将删除所有名称包含 'Lark Document Agent' 的 Agent"
+        echo "警告: 这将删除所有名称包含 'WebEye Nexus Agent' 或 'Lark Document Agent' 的 Agent"
         read -p "确认删除? (y/N): " confirm
         if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
-            agents_response=$(curl -s -X GET \
+            agents_response=$(curl --http1.1 -s -X GET \
               -H "Authorization: Bearer $(gcloud auth print-access-token)" \
               -H "Content-Type: application/json" \
               -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -174,13 +174,13 @@ import sys, json
 data = json.load(sys.stdin)
 for agent in data.get('agents', []):
     display_name = agent.get('displayName', '')
-    if 'Lark Document Agent' in display_name:
+    if 'WebEye Nexus Agent' in display_name or 'Lark Document Agent' in display_name:
         print(agent.get('name', ''))
 ")
             
             for agent_name in $lark_agents; do
                 echo "正在删除: $agent_name"
-                curl -X DELETE \
+                curl --http1.1 -X DELETE \
                   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
                   -H "Content-Type: application/json" \
                   -H "X-Goog-User-Project: ${PROJECT_ID}" \

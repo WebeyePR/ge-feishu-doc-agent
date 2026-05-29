@@ -1,3 +1,11 @@
+import sys
+# 运行时重定向补丁，在包加载瞬间，建立 lark_agent 到 nexus_agent 的软重定向
+try:
+    import lark_agent
+except ImportError:
+    import nexus_agent
+    sys.modules['lark_agent'] = nexus_agent
+
 import os
 import socket
 import tomllib
@@ -10,7 +18,7 @@ from vertexai import agent_engines
 
 dotenv.load_dotenv()
 
-from lark_agent import root_agent
+from nexus_agent import root_agent
 
 PYTHONPATH = os.environ.get("PYTHONPATH", ".")
 
@@ -23,12 +31,12 @@ CREATE_TIMEOUT_SECONDS = float(os.getenv("AGENT_ENGINE_CREATE_TIMEOUT_SECONDS", 
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # .whl 文件就在脚本所在目录 (由 deploy.sh 生成)
-AGENT_WHL_FILE_NAME = "adk_agents-0.1.0-py3-none-any.whl"
+AGENT_WHL_FILE_NAME = "ge_nexus_agent-1.0.0-py3-none-any.whl"
 AGENT_WHL_FILE = os.path.join(CURRENT_DIR, AGENT_WHL_FILE_NAME)
 
-# 专门用于存储部署过程中自动生成的参数，位于项目根目录
+# 专门用于存储部署过程中自动生成的参数，优先使用环境变量指定的绝对路径
 ROOT_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))
-DEPLOY_ENV_FILE = os.path.join(ROOT_DIR, ".deploy_env")
+DEPLOY_ENV_FILE = os.getenv("DEPLOY_ENV_FILE", os.path.join(ROOT_DIR, ".deploy_env"))
 PYPROJECT_FILE = os.path.join(ROOT_DIR, "pyproject.toml")
 
 
@@ -107,7 +115,7 @@ polling.DEFAULT_POLLING = polling.DEFAULT_POLLING.with_timeout(CREATE_TIMEOUT_SE
 app = agent_engines.AdkApp(
     agent=root_agent,
     enable_tracing=False,  # 彻底避开 OpenTelemetry 的 Context 冲突
-    app_name="lark-agent-app",
+    app_name="webeye-nexus-agent-app",
 )
 
 # 打印文件大小供调试
@@ -137,7 +145,7 @@ try:
         agent_engine=app,
         requirements=requirements_source,
         extra_packages=[AGENT_WHL_FILE_NAME],
-        display_name=os.getenv("AGENT_DISPLAY_NAME", "Lark Document Agent"),
+        display_name=os.getenv("AGENT_DISPLAY_NAME", "WebEye Nexus Agent"),
         env_vars={
             "LARK_AUTH_ID": os.getenv("LARK_AUTH_ID"),
             "LARK_DOMAIN": os.getenv("LARK_DOMAIN"),

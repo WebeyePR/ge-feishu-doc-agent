@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==============================================================================
-# Lark Agent 项目初始化脚本
+# WebEye Nexus Agent 项目初始化脚本
 # ==============================================================================
 
 set -e
@@ -134,7 +134,7 @@ function setup_gcs_bucket() {
 
 function main() {
     echo -e "${GREEN}=========================================="
-    echo "       Lark Agent 项目初始化程序"
+    echo "       WebEye Nexus Agent 项目初始化程序"
     echo -e "==========================================${NC}"
 
     check_base_commands
@@ -146,7 +146,7 @@ function main() {
 
     echo -e "\n${GREEN}项目初始化成功！${NC}"
     echo -e "后续步骤："
-    echo -e "1. 运行 ${YELLOW}uv run python -m lark_agent.main${NC} 本地调试"
+    echo -e "1. 运行 ${YELLOW}uv run python -m nexus_agent.main${NC} 本地调试"
     echo -e "2. 运行 ${YELLOW}bash deploy.sh${NC} 部署到云端"
 }
 

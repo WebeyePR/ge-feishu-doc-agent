@@ -11,7 +11,7 @@ source "$SCRIPT_DIR/load_env.sh"
 GE_APP_LOCATION="${GE_APP_LOCATION:-global}"
 
 echo "=== 1. 查询 Agent 列表 ==="
-curl -X GET \
+curl --http1.1 -X GET \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
   -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -20,7 +20,7 @@ curl -X GET \
 
 echo ""
 echo "=== 2. 查询授权资源列表 ==="
-curl -X GET \
+curl --http1.1 -X GET \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
   -H "X-Goog-User-Project: ${PROJECT_ID}" \
@@ -30,7 +30,7 @@ curl -X GET \
 echo ""
 echo "=== 3. 查询特定授权资源详情 ==="
 echo "Auth ID: $LARK_AUTH_ID"
-curl -X GET \
+curl --http1.1 -X GET \
   -H "Authorization: Bearer $(gcloud auth print-access-token)" \
   -H "Content-Type: application/json" \
   -H "X-Goog-User-Project: ${PROJECT_ID}" \
