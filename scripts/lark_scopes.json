@@ -2,26 +2,33 @@
   "scopes": {
     "tenant": [],
     "user": [
-      "docs:document.content:read",
-      "docs:document.media:download",
-      "docs:document.media:upload",
-      "docs:document:export",
+      "offline_access",
+      "bitable:app",
+      "docx:document",
       "docs:document:import",
+      "docs:document.content:read",
+      "docs:document:export",
       "docs:permission.setting:read",
       "docx:document",
-      "docx:document:create",
       "docx:document:readonly",
-      "docx:document:write_only",
+      "docs:document.media:download",
       "drive:drive",
       "drive:drive.metadata:readonly",
       "drive:drive.search:readonly",
       "drive:drive:readonly",
+      "wiki:wiki",
+      "wiki:wiki:readonly",
       "drive:export:readonly",
-      "drive:file:download",
-      "drive:file:upload",
-      "offline_access",
       "search:docs:read",
-      "space:document:delete"
+      "calendar:calendar",
+      "calendar:calendar:readonly",
+      "calendar:calendar.event:create",
+      "calendar:calendar.event:read",
+      "calendar:calendar.event:update",
+      "im:chat",
+      "im:message",
+      "im:message.group_msg",
+      "im:message"
     ]
   }
 }
