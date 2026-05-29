@@ -24,7 +24,14 @@ build-backend = "setuptools.build_meta"
 include = ["lark_agent*"]
 
 [tool.setuptools.package-data]
-lark_agent = ["bin/lark-cli", "bin/gws", "gws_registry/commands.json"]  # 临时注释，避免上传超时
+# 声明打包包含的非 py 资源文件，确保部署及发布后的 wheel 包中包含必要的执行器与命令注册表。
+# 早期关于上传超时的疑虑已在最新的 deploy 脚本超时机制中完美解决，此处需完整打包以保证自省功能高可用。
+lark_agent = [
+    "bin/lark-cli",
+    "bin/gws",
+    "gws_registry/commands.json",
+    "lark_registry/commands.json",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

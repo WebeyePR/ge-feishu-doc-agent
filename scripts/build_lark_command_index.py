@@ -17,7 +17,7 @@ import logging
 import re
 import shlex
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any, Dict, Iterable, List, Set
 
 # 配置日志
 logging.basicConfig(

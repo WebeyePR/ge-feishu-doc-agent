@@ -3,6 +3,11 @@
 # 自动加载项目环境变量 (.env 和 .deploy_env)
 # ==============================================================================
 
+# 重置部署脚本动态管理的内存生成变量，杜绝当前 Shell 终端进程的环境变量残留污染。
+# 确保每次加载皆以物理配置文件 (.deploy_env) 为绝对的唯一真相来源。
+unset VERTEX_REASONING_ENGINE_NAME
+unset GE_AGENT_RESOURCE_NAME
+
 # 获取脚本所在目录的绝对路径
 L_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 获取项目根目录 (假设此脚本在 scripts/ 目录下)
