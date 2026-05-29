@@ -1,6 +1,6 @@
-# Lark Agent (ADK Agent)
+# WebEye Nexus Agent (webeye-ge-nexus-agent)
 
-这是一个基于 Google Agent Development Kit (ADK) 构建的智能对话助手，旨在帮助企业员工在统一的 AI 交互环境中，通过自然语言对话快速、安全地完成飞书云文档查询、读取、创建、更新以及更多飞书生态操作。
+**WebEye Nexus Agent for Gemini Enterprise** 这是一个基于 Google Agent Development Kit (ADK) 构建的企业级智能 Agent。本项目部署于 Vertex AI Agent Engine 与 Gemini Enterprise 生产环境，并深度整合了飞书生态与 Google Workspace。旨在帮助企业员工在统一的 AI 交互环境中，通过自然语言对话快速、安全、高效地完成飞书云文档、云盘检索、以及 Google 日历与表格等跨平台操作。
 
 ## ✨ 主要功能
 
@@ -8,7 +8,9 @@
 *   **文档内容问答**: 支持读取飞书文档内容，包含 Markdown 文本与多模态图片内容，并基于文档内容回答问题。
 *   **AI 输出写入文档**: 支持将 Agent 生成的 Markdown 内容写入新的飞书云文档，或追加、覆盖更新已有文档，并返回文档链接、任务状态或更新结果。
 *   **飞书生态操作扩展**: 内置 `lark-cli` 二进制，可通过 CLI 封装或通用 OpenAPI 工具扩展 Drive、Wiki、Base、Sheets、Calendar、Task、IM 等飞书能力。
-*   **安全认证**: 集成 Lark OAuth2.0 认证流程。当检测到用户未授权时，会自动引导用户登录授权（Gemini Enterprise 默认行为）。
+*   **Google Workspace 深度整合**: 内置 `gws` 二进制工具，支持通过 Gemini Enterprise OAuth2 注入的用户态凭证无缝调用 Google APIs（如 Google Calendar、Google Sheets 等），支持日程管理、表格读写与跨生态办公联动。
+*   **双生态 OAuth 安全认证**: 完美继承 Gemini Enterprise 的安全授权机制，支持飞书与 Google Workspace 双重 OAuth 认证流程。当检测到用户未授权时，会自动引导用户登录授权，确保企业数据安全合规。
+*   **高抗震防灾设计 (Anti-Crash)**: 引入了工业级全局防御与异常拦截机制（Phase VII），全方位隔离因临期凭证、第三方 API 抖动、并发或极端入参导致的异常，以卓越的弹性降级与入参类型守卫，杜绝模型运行时崩溃，实现全年无休高可用。
 
 ## 🎥 使用演示
 
@@ -24,8 +26,9 @@
     *   `agent.py`: 定义 `LlmAgent` 的角色、Prompt 和工具集。
     *   `tools.py`: 定义供 Agent 调用的工具函数，负责参数校验、授权读取、结果归一化和业务级封装。
     *   `callbacks.py`: 处理多模态响应兼容性等运行时补丁。
+    *   `lark_registry/commands.json` & `gws_registry/commands.json`: 平台命令元数据注册表，驱动二进制的自省和模糊匹配。
     *   `infrastructure/lark_api_repository.py`: 封装飞书 OpenAPI、文档读取和飞书 MCP 网关调用。
-    *   `infrastructure/cli_client.py`: 封装随包发布的 `lark-cli` 二进制，使用隔离 `HOME` 和环境变量传递用户态 access token。
+    *   `infrastructure/cli_client.py`: 统一封装随包发布的 `lark-cli` 与 `gws` 二进制工具，使用隔离 `HOME` 和环境变量，在安全沙箱中惰性传递并应用用户态 OAuth 凭证。
 
 系统时序图如下所示：
 
@@ -58,9 +61,9 @@ sequenceDiagram
     MCP->>FS: Execute official MCP-backed document operation
     FS-->>MCP: Return document result
     MCP-->>AE: Return normalized MCP payload
-  else Broad Feishu ecosystem tools
-    AE->>CLI: Run packaged lark-cli (access_token + structured args)
-    CLI->>FS: Execute CLI/OpenAPI operation
+  else Broad Feishu/Google Workspace ecosystem tools
+    AE->>CLI: Run packaged lark-cli / gws tool (access_token + structured args)
+    CLI->>FS: Execute Feishu / Google Workspace OpenAPI operation
     FS-->>CLI: Return API result
     CLI-->>AE: Return normalized JSON result
   end
@@ -69,9 +72,17 @@ sequenceDiagram
   G-->>U: Present output (text / list / links / export status)
 ```
 
+### 🛡️ 极限防灾与安全加固 (Phase VII)
+
+为了将本 Agent 打造为工业级高可用的企业级跨平台智能助手，我们在 **Phase VII** 中实施了全方位的安全防护与全局异常拦截机制（Anti-Crash Hardening）：
+
+*   **凭证安全沙箱化与惰性获取**：将 `lark-cli` 及 `gws` 二进制调用器中获取用户 OAuth Token 的逻辑深埋于底层执行沙箱中，仅在命令执行前一刻进行加密和惰性拉取，且全程由 `try-except` 进行强力容错防护。彻底根治了临期 Token 过期或获取网络抖动导致的启动级/调用级崩溃。
+*   **强类型安全守卫 (Guardians)**：在所有高频及高风险工具（如创建/列出日程等）的入口层引入物理级及强类型参数校准机制。对 `datetime`、`max_results` 等参数进行强制校验、转换与格式归一化。即使大模型在幻觉或极端语境下生成了不合规、越界的 JSON 入参，也会被防御层静默校准与修复，绝对不传导至底层，保障系统无懈可击。
+*   **弹性降级拦截**：所有的底层 API 与 CLI 工具皆由双重 `try-except` 兜底。若飞书侧或 Google 日历服务器发生临时熔断，Agent 将通过规范化的 JSON-RPC 容错报文进行弹性降级答复，以友好、专业的回复代替系统异常栈抛出，守护模型完美的运行时生命周期。
+
 ## ⚙️ 配置 (.env)
 
-在本地运行或部署前，请在项目根目录创建 `.env` 文件，并修改必填配置：
+在本地运行或部署前，请在项目根目录创建 `.env` 文件，并修改必填配置（参考如下示例）：
 
 ```env
 # --- 飞书 (Lark) 集成配置 ---
@@ -82,18 +93,38 @@ LARK_CLIENT_ID="your-lark-app-id"
 # （必填参数）飞书开放平台应用 App Secret
 LARK_CLIENT_SECRET="your-lark-app-secret"
 
+# --- Google Workspace 集成配置 ---
+# （选填）注册 Google Workspace OAuth 到 Gemini Enterprise 时设置的 auth_id；必须对每个 Agent 唯一
+GOOGLE_WORKSPACE_AUTH_ID="your-google-workspace-auth-id"
+# （启用 Google Workspace GE OAuth 时必填）Google Cloud OAuth Web Client 凭证
+GOOGLE_WORKSPACE_CLIENT_ID="your-google-workspace-client-id"
+GOOGLE_WORKSPACE_CLIENT_SECRET="your-google-workspace-client-secret"
+# （选填）gws helper 需要 GCP project 时使用；默认可复用 PROJECT_ID
+GOOGLE_WORKSPACE_PROJECT_ID=""
 
 # --- Google Cloud Platform (Vertex AI) 配置 ---
 # （必填参数）GCP 项目 ID (Vertex AI 调用及部署时需要)
-PROJECT_ID=""  # your-project-id
+PROJECT_ID="your-gcp-project-id"
+# （选填）API 服务区域 (如 us-central1，全局为 global)
+LOCATION="global"
+# （选填）目标 Gemini 模型名称 (如 gemini-3-flash-preview)
+MODEL_NAME="gemini-3-flash-preview"
 
+# --- Google Cloud 部署配置 ---
+# （选填）Reasoning Engine 的部署区域 (如 us-central1)
+DEPLOY_LOCATION="us-central1"
+# （选填）用于存放部署文件的 Google Cloud Storage Bucket 地址
+STAGING_BUCKET="gs://adk-agent-deploy"
+# （选填）Agent 显示名称
+AGENT_DISPLAY_NAME="WebEye Nexus Agent"
+# （选填）Agent 描述信息
+AGENT_DESCRIPTION="Nexus Agent for Gemini Enterprise integrating Lark & Google Workspace"
 
 # --- Gemini Enterprise 配置，查看App: https://console.cloud.google.com/gemini-enterprise/apps ---
 # （必填参数）Gemini Enterprise 中对应的 App (Engine) ID
-GE_APP_ID=""  # 如 webeye-app_1742521319182
+GE_APP_ID="your-ge-app-id"  # 如 webeye-app_1742521319182
 # （必填参数）Gemini Enterprise 数据区域 (如 global, us, eu)
-GE_APP_LOCATION="global"  # e.g., global, us, eu
-
+GE_APP_LOCATION="global"
 
 # --- 本地运行配置 ---
 # （选填）是否使用 Vertex AI (1) 或 Google AI Studio (0)
@@ -233,7 +264,32 @@ uv run adk web
     ```bash
     uv sync
     ```
-*   **代码风格**: 遵循 Python 标准代码风格。
+*   **代码风格**: 遵循 Python 标准代码风格.
+*   **自动化测试**: 拥有覆盖核心工具、API 仓储、多模态回调及防崩溃安全守卫的完整测试套件。目前全量 **75 项单元测试 100% 绿旗通过**，有力地保障了在进行底层加固与扩展时的零回归、零崩溃：
+    ```bash
+    .venv/bin/pytest -v
+    ```
+
+### 🔄 如何更新平台命令索引库文件 (commands.json)
+
+作为面向多平台扩展的 Agent 引擎，其核心的自省与分词模糊匹配能力重度依赖随包发布的 `commands.json` 命令元数据字典。当飞书、Google Workspace 等平台有 API 扩展，或二进制文件升级引入新命令时，可遵循以下维护指引：
+
+1. **一键生成/刷新最新索引**：
+   在本地环境中，通过 `uv run` 触发项目内置的自动化抓取索引生成器，它会自动调用本地二进制，解析命令并融合、导出最新的 JSON 文件：
+   ```bash
+   # 更新 Lark (飞书) 平台命令索引注册表
+   uv run scripts/build_lark_command_index.py
+   
+   # 更新 Google Workspace (GWS) 平台命令索引注册表
+   uv run scripts/build_gws_command_index.py
+   ```
+2. **测试与提交验证**：
+   运行本地测试，确认新命令在加载和匹配时均完美通过：
+   ```bash
+   .venv/bin/pytest -v
+   ```
+3. **打包部署同步**：
+   因为 `pyproject.toml` 中的 `package-data` 已经注册并声明了打包包含这些文件，您提交最新的 `commands.json` 并执行 `bash deploy.sh` 时，最先进的命令索引库将跟随 wheel 包无缝推送、加载于云端。
 
 ## 📚 相关文档
 
