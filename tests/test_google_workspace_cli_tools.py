@@ -526,3 +526,32 @@ def test_create_google_calendar_event_anticrash():
     assert "Google Workspace CLI execution failed" in result3["message"] or "authentication" in result3["message"]
 
 
+def test_clean_markdown_from_plain_text():
+    from nexus_agent.tools import _clean_markdown_from_plain_text
+    
+    # 1. 验证加粗、斜体符号的物理洗涤
+    raw_text = "Hello **David**, this is ***very*** important. Please check __this__ and *that*."
+    expected = "Hello David, this is very important. Please check this and that."
+    assert _clean_markdown_from_plain_text(raw_text) == expected
+    
+    # 2. 验证多重转义的 \\n 还原
+    raw_text_2 = "Line 1\\nLine 2"
+    expected_2 = "Line 1\nLine 2"
+    assert _clean_markdown_from_plain_text(raw_text_2) == expected_2
+    
+    # 3. 验证 Markdown 标题的商务平滑转换
+    raw_text_3 = "# Main Project Sync\n## Subtopic\nRegular text"
+    # `# Main Project Sync` 应被转换为 `★ MAIN PROJECT SYNC ★`
+    # `## Subtopic` 应被转换为 `【Subtopic】`
+    cleaned = _clean_markdown_from_plain_text(raw_text_3)
+    assert "★ MAIN PROJECT SYNC ★" in cleaned
+    assert "【Subtopic】" in cleaned
+    assert "#" not in cleaned
+    
+    # 4. 验证代码块反引号的完美剃除
+    raw_text_4 = "```python\nprint('hello')\n```"
+    cleaned_4 = _clean_markdown_from_plain_text(raw_text_4)
+    assert "```" not in cleaned_4
+
+
+

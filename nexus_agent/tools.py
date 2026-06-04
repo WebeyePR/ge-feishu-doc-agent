@@ -197,8 +197,62 @@ def get_google_workspace_access_token(tool_context: ToolContext) -> str:
     return tool_context.state.get(f"{GOOGLE_WORKSPACE_AUTH_ID}")
 
 
+def _clean_markdown_from_plain_text(text: str) -> str:
+    """
+    清洗文本中的 Markdown 格式，防止其泄漏在 Plain Text 的邮件中。
+    1. 将标题（# 标题）转换为更优雅的商务纯文本：★ 标题 ★ 或 【标题】
+    2. 去除加粗/斜体控制符：**文本** -> 文本，*文本* -> 文本
+    3. 清洗代码块反引号：``` -> 空白
+    4. 保留无害的排版列表符号（如 '- ' 和 '1. '），并将 '\\n' 还原为真正的换行符
+    """
+    if not isinstance(text, str):
+        return text
+    
+    # 物理洗涤还原：将大模型可能幻觉出的字面量 \\n 强行还原为真实的换行符
+    text = text.replace("\\n", "\n")
+    
+    import re
+    # 1. 匹配并清洗 Markdown 标题：如 '\n# Title\n' -> '\n★ TITLE ★\n'
+    def replace_header(match):
+        level = len(match.group(1))
+        content = match.group(2).strip()
+        if level == 1:
+            return f"\n★ {content.upper()} ★\n"
+        else:
+            return f"\n【{content}】\n"
+            
+    text = re.sub(r'^(#{1,6})\s+(.+)$', replace_header, text, flags=re.MULTILINE)
+    
+    # 2. 清洗加粗/斜体控制符
+    text = re.sub(r'\*{3}(.*?)\*{3}', r'\1', text) # ***bold-italic***
+    text = re.sub(r'\*{2}(.*?)\*{2}', r'\1', text) # **bold**
+    text = re.sub(r'_(.*?)_', r'\1', text)         # _italic_
+    text = re.sub(r'\*(.*?)\*', r'\1', text)       # *italic*
+    text = re.sub(r'__([\s\S]*?)__', r'\1', text)   # __bold__
+    
+    # 3. 清洗代码块反引号
+    text = re.sub(r'```[a-zA-Z]*\n?', '', text)
+    
+    # 4. 去除行尾多余空格
+    lines = text.split("\n")
+    cleaned_lines = []
+    for line in lines:
+        cleaned_lines.append(line.rstrip())
+        
+    return "\n".join(cleaned_lines)
+
+
 def _run_google_workspace_cli(args: list, tool_context: ToolContext, timeout_seconds: int = 120) -> dict:
     try:
+        # 物理洗涤层：对 gmail 发信 `--body` 参数进行无损 Markdown 降维净化洗涤
+        for i in range(len(args)):
+            if isinstance(args[i], str):
+                if args[i] == "--body" and i + 1 < len(args) and isinstance(args[i+1], str):
+                    args[i+1] = _clean_markdown_from_plain_text(args[i+1])
+
+        # 物理洗涤层：抗幻觉自愈，将大模型在命令行参数中可能幻觉出的字面量 \\n 强行还原为真实的换行符
+        args = [arg.replace("\\n", "\n") if isinstance(arg, str) else arg for arg in args]
+        
         access_token = get_google_workspace_access_token(tool_context)
         if not access_token:
             return {
@@ -1229,6 +1283,15 @@ def _run_lark_cli(args: list, tool_context: ToolContext, timeout_seconds: int = 
     使用 cli_client 隔离执行，并传递 Lark 的 access_token。
     """
     try:
+        # 物理洗涤层：对飞书发消息等 `--text` 参数进行无损 Markdown 降维净化洗涤
+        for i in range(len(args)):
+            if isinstance(args[i], str):
+                if args[i] == "--text" and i + 1 < len(args) and isinstance(args[i+1], str):
+                    args[i+1] = _clean_markdown_from_plain_text(args[i+1])
+
+        # 物理洗涤层：抗幻觉自愈，将大模型在命令行参数中可能幻觉出的字面量 \\n 强行还原为真实的换行符
+        args = [arg.replace("\\n", "\n") if isinstance(arg, str) else arg for arg in args]
+        
         access_token = get_access_token(tool_context)
         if not access_token:
             return {
